@@ -41,7 +41,12 @@ import androidx.compose.ui.unit.dp
 import app.aura.WeatherUiState
 import app.aura.core.format.Formatters
 import app.aura.core.model.DailyForecast
+import app.aura.ui.components.AuraIcons
 import app.aura.ui.components.ConditionOrb
+import app.aura.ui.components.GlassCard
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
+import kotlin.math.roundToInt
 import app.aura.ui.theme.AuraColors
 import app.aura.ui.theme.AuraType
 
@@ -66,6 +71,15 @@ fun ForecastScreen(state: WeatherUiState, contentPadding: PaddingValues) {
             }
         }
         if (forecast == null) return@LazyColumn
+        if (state.weekSummary.isNotEmpty()) item {
+            GlassCard(Modifier.fillMaxWidth().padding(bottom = 6.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(AuraIcons.Sparkle, contentDescription = null, tint = AuraColors.Sun, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(12.dp))
+                    Text(state.weekSummary, style = AuraType.Body, color = AuraColors.TextPrimary)
+                }
+            }
+        }
         val min = forecast.daily.minOf { it.minC }
         val max = forecast.daily.maxOf { it.maxC }
         itemsIndexed(forecast.daily) { index, day ->
@@ -142,11 +156,15 @@ private fun DayRow(
         }
         if (expanded) {
             Column(Modifier.padding(start = 14.dp, end = 14.dp, bottom = 14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text(day.summary, style = AuraType.Body, color = AuraColors.TextSecondary)
+                Text(
+                    "${Formatters.condition(day.condition)}. " + if (day.precipitationSumMm >= 0.1) "Осадки ${"%.1f".format(day.precipitationSumMm)} мм." else "Без осадков.",
+                    style = AuraType.Body,
+                    color = AuraColors.TextSecondary,
+                )
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Stat("Ветер", "${day.windSpeedMs.toInt()} м/с", Modifier.weight(1f))
-                    Stat("УФ-индекс", "${day.uvIndex}", Modifier.weight(1f))
-                    Stat("Влажность", "${day.humidityPercent} %", Modifier.weight(1f))
+                    Stat("Ветер", "до ${day.windSpeedMaxMs.roundToInt()} м/с", Modifier.weight(1f))
+                    Stat("УФ-индекс", "${day.uvIndexMax.roundToInt()}", Modifier.weight(1f))
+                    Stat("Солнце", "${day.sunrise?.let(Formatters::time) ?: "—"}–${day.sunset?.let(Formatters::time) ?: "—"}", Modifier.weight(1f))
                 }
             }
         }

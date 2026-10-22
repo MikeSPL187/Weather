@@ -16,10 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -27,10 +24,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,9 +33,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import app.aura.WeatherUiState
 import app.aura.core.format.Formatters
-import app.aura.core.model.Condition
+import app.aura.core.model.DataSource
 import app.aura.ui.components.AuraIcons
-import app.aura.ui.components.ConditionOrb
 import app.aura.ui.components.GlassCard
 import app.aura.ui.scene.WeatherScene
 import app.aura.ui.theme.AuraColors
@@ -52,7 +44,9 @@ import app.aura.ui.theme.AuraType
 fun NowScreen(
     state: WeatherUiState,
     onOpenCities: () -> Unit,
-    onSceneTap: () -> Unit,
+    onScenePreview: () -> Unit,
+    onEndPreview: () -> Unit,
+    onRetry: () -> Unit,
     contentPadding: PaddingValues,
 ) {
     val forecast = state.forecast
@@ -65,10 +59,16 @@ fun NowScreen(
             .padding(contentPadding),
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(start = 24.dp, end = 12.dp, top = 12.dp),
+            modifier = Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Column(Modifier.weight(1f)) {
+            Column(
+                Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(14.dp))
+                    .clickable(role = Role.Button, onClickLabel = "Выбрать город", onClick = onOpenCities)
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
+            ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(AuraIcons.Pin, contentDescription = null, tint = AuraColors.TextPrimary, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(6.dp))
@@ -88,99 +88,98 @@ fun NowScreen(
             }
         }
 
+        state.error?.let { message ->
+            GlassCard(
+                modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp).clickable(onClickLabel = "Повторить", onClick = onRetry),
+                fill = Color(0x66402A10),
+            ) {
+                Text("$message Нажмите, чтобы повторить.", style = AuraType.Caption, color = Color(0xFFFFE0B0))
+            }
+        }
+
         if (scene != null) {
             WeatherScene(
                 scene = scene,
-                modifier = Modifier.fillMaxWidth().height(300.dp).padding(top = 8.dp),
-                onTap = onSceneTap,
+                modifier = Modifier.fillMaxWidth().height(330.dp),
+                onLongPress = onScenePreview,
             )
         } else {
-            Spacer(Modifier.height(308.dp))
+            Box(Modifier.fillMaxWidth().height(330.dp), contentAlignment = Alignment.Center) {
+                Text("Загружаем погоду…", style = AuraType.Body, color = AuraColors.TextSecondary)
+            }
         }
 
         if (forecast != null && scene != null) {
-            val today = forecast.daily.first()
+            val today = forecast.daily.firstOrNull()
             Column(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(Formatters.temperature(forecast.current.temperatureC), style = AuraType.Temperature, color = AuraColors.TextPrimary)
-                Text(Formatters.condition(scene.condition, scene.isNight), style = AuraType.Condition, color = AuraColors.TextPrimary)
+                Text(Formatters.condition(forecast.current.condition, scene.isNight), style = AuraType.Condition, color = AuraColors.TextPrimary)
                 Text(
-                    "Ощущается как ${Formatters.temperature(forecast.current.feelsLikeC)} · ↑${Formatters.temperature(today.maxC)} ↓${Formatters.temperature(today.minC)}",
+                    buildString {
+                        append("Ощущается как ${Formatters.temperature(forecast.current.feelsLikeC)}")
+                        if (today != null) append(" · ↑${Formatters.temperature(today.maxC)} ↓${Formatters.temperature(today.minC)}")
+                    },
                     style = AuraType.Body,
                     color = AuraColors.TextSecondary,
                     textAlign = TextAlign.Center,
                 )
-                if (state.demoCondition != null) {
+                state.preview?.let { preview ->
                     Text(
-                        "Демо-режим: погода на сцене меняется по нажатию",
+                        "Предпросмотр сцены: ${Formatters.condition(preview, scene.isNight).lowercase()} · вернуть",
                         style = AuraType.Caption,
                         color = AuraColors.Sun,
-                        modifier = Modifier.padding(top = 6.dp),
+                        modifier = Modifier
+                            .padding(top = 8.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable(role = Role.Button, onClick = onEndPreview)
+                            .padding(horizontal = 10.dp, vertical = 6.dp),
                     )
                 }
             }
 
             state.nowcast?.let { nowcast ->
                 GlassCard(modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 18.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier.size(36.dp).clip(RoundedCornerShape(12.dp)).background(AuraColors.Ice.copy(alpha = 0.22f)),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Icon(AuraIcons.Drop, contentDescription = null, tint = Color(0xFF9FEFFF), modifier = Modifier.size(20.dp))
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier.size(36.dp).clip(RoundedCornerShape(12.dp)).background(AuraColors.Ice.copy(alpha = 0.22f)),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Icon(AuraIcons.Drop, contentDescription = null, tint = Color(0xFF9FEFFF), modifier = Modifier.size(20.dp))
+                            }
+                            Spacer(Modifier.width(12.dp))
+                            Column {
+                                Text(nowcast.headline, style = AuraType.CardTitle, color = AuraColors.TextPrimary)
+                                Text("Вероятность осадков ${forecast.nowcast.precipitationChancePercent} %", style = AuraType.Caption, color = AuraColors.TextSecondary)
+                            }
                         }
-                        Spacer(Modifier.width(12.dp))
-                        Column {
-                            Text(nowcast.headline, style = AuraType.CardTitle, color = AuraColors.TextPrimary)
-                            Text("Уверенность прогноза ${forecast.nowcast.confidencePercent} %", style = AuraType.Caption, color = AuraColors.TextSecondary)
-                        }
+                        NowcastChart(forecast.nowcast)
                     }
                 }
             }
 
-            HourlyStrip(state, Modifier.padding(top = 12.dp))
-            state.sunTimes?.let { sun ->
-                Text(
-                    "Восход ${sun.sunrise?.let(Formatters::time) ?: "—"} · закат ${sun.sunset?.let(Formatters::time) ?: "—"}",
-                    style = AuraType.Caption,
-                    color = AuraColors.TextSecondary,
-                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 16.dp),
-                    textAlign = TextAlign.Center,
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun HourlyStrip(state: WeatherUiState, modifier: Modifier = Modifier) {
-    val forecast = state.forecast ?: return
-    var selected by remember { mutableIntStateOf(0) }
-    GlassCard(modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            itemsIndexed(forecast.hourly) { index, hour ->
-                val label = if (index == 0) "Сейчас" else Formatters.time(hour.time)
-                val night = hour.time.hour < 7 || hour.time.hour >= 18
-                Column(
-                    modifier = Modifier
-                        .width(56.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(if (index == selected) Color.White.copy(alpha = 0.2f) else Color.Transparent)
-                        .selectable(selected = index == selected, role = Role.Tab, onClick = { selected = index })
-                        .padding(vertical = 8.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    Text(label, style = AuraType.Caption, color = AuraColors.TextSecondary)
-                    ConditionOrb(if (index == 0) state.scene?.condition ?: hour.condition else hour.condition, isNight = night)
-                    Text(Formatters.temperature(hour.temperatureC), style = AuraType.CardTitle, color = AuraColors.TextPrimary)
-                    if (hour.precipitationChancePercent >= 30 && hour.condition != Condition.CLEAR) {
-                        Text("${hour.precipitationChancePercent} %", style = AuraType.Caption, color = Color(0xFF9FEFFF))
-                    }
+            GlassCard(modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text("24 ЧАСА", style = AuraType.Label, color = AuraColors.TextSecondary)
+                    HourlyChart(forecast.hourly)
                 }
             }
+
+            DetailCards(state, Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp))
+
+            Text(
+                when (forecast.source) {
+                    DataSource.LIVE -> "Данные: Open-Meteo (CC BY 4.0)${state.updatedAt?.let { " · обновлено ${Formatters.time(it)}" } ?: ""}"
+                    DataSource.SAMPLE -> "Пример данных: реальный прогноз не загружен"
+                },
+                style = AuraType.Caption,
+                color = AuraColors.TextSecondary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 8.dp),
+            )
         }
     }
 }

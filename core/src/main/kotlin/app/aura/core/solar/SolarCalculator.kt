@@ -39,7 +39,7 @@ object SolarCalculator {
         val declination = 0.006918 - 0.399912 * cos(gamma) + 0.070257 * sin(gamma) -
             0.006758 * cos(2 * gamma) + 0.000907 * sin(2 * gamma) -
             0.002697 * cos(3 * gamma) + 0.00148 * sin(3 * gamma)
-        val trueSolarMinutes = minutesOfDay + equationOfTime + 4 * city.longitude - 60 * city.utcOffsetHours
+        val trueSolarMinutes = minutesOfDay + equationOfTime + 4 * city.longitude - city.utcOffsetMinutes
         val hourAngle = (trueSolarMinutes / 4 - 180) * RAD
         val lat = city.latitude * RAD
         val cosZenith = (sin(lat) * sin(declination) + cos(lat) * cos(declination) * cos(hourAngle)).coerceIn(-1.0, 1.0)

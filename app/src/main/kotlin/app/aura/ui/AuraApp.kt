@@ -14,11 +14,14 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.aura.WeatherUiState
 import app.aura.WeatherViewModel
+import app.aura.ui.assistant.AssistantScreen
 import app.aura.ui.cities.CitiesScreen
 import app.aura.ui.components.Tab
 import app.aura.ui.components.TabBar
@@ -31,15 +34,22 @@ fun AuraApp(viewModel: WeatherViewModel = viewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     var tab by rememberSaveable { mutableStateOf(Tab.NOW) }
     var showCities by rememberSaveable { mutableStateOf(false) }
+    val haptics = LocalHapticFeedback.current
 
     if (showCities) {
         BackHandler { showCities = false }
         CitiesScreen(
-            selected = state.city,
+            state = state,
             onSelect = { city ->
-                viewModel.selectCity(city.id)
+                viewModel.select(city)
                 showCities = false
             },
+            onAdd = { city ->
+                viewModel.addCity(city)
+                showCities = false
+            },
+            onRemove = { viewModel.removeCity(it.id) },
+            onQueryChange = viewModel::search,
             onBack = { showCities = false },
         )
         return
@@ -48,9 +58,17 @@ fun AuraApp(viewModel: WeatherViewModel = viewModel()) {
     AuraScaffold(
         state = state,
         tab = tab,
-        onTabChange = { tab = it },
+        onTabChange = {
+            haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+            tab = it
+        },
         onOpenCities = { showCities = true },
-        onSceneTap = viewModel::cycleDemoCondition,
+        onScenePreview = {
+            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+            viewModel.cyclePreview()
+        },
+        onEndPreview = viewModel::endPreview,
+        onRetry = viewModel::retry,
     )
 }
 
@@ -61,7 +79,9 @@ fun AuraScaffold(
     tab: Tab,
     onTabChange: (Tab) -> Unit,
     onOpenCities: () -> Unit,
-    onSceneTap: () -> Unit,
+    onScenePreview: () -> Unit = {},
+    onEndPreview: () -> Unit = {},
+    onRetry: () -> Unit = {},
 ) {
     // Space the floating tab bar occupies, so scrolling content clears it.
     val barPadding = PaddingValues(bottom = 68.dp + 22.dp + 16.dp)
@@ -74,7 +94,9 @@ fun AuraScaffold(
             Tab.NOW -> NowScreen(
                 state = state,
                 onOpenCities = onOpenCities,
-                onSceneTap = onSceneTap,
+                onScenePreview = onScenePreview,
+                onEndPreview = onEndPreview,
+                onRetry = onRetry,
                 contentPadding = barPadding,
             )
             Tab.FORECAST -> ForecastScreen(state, barPadding)
@@ -83,11 +105,7 @@ fun AuraScaffold(
                 description = "3D-карта осадков с шагом времени готова в макетах и появится после подключения радарных данных.",
                 contentPadding = barPadding,
             )
-            Tab.ASSISTANT -> ComingSoonScreen(
-                title = "Ассистент",
-                description = "Советы «что надеть» и «лучшее окно» для пробежки и прогулки появятся в версии 2.0.",
-                contentPadding = barPadding,
-            )
+            Tab.ASSISTANT -> AssistantScreen(state, barPadding)
         }
         TabBar(
             selected = tab,
