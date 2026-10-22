@@ -97,4 +97,15 @@ class SceneTest {
         assertEquals((clear.cloud + storm.cloud) / 2, half.cloud, 1e-6f)
         assertEquals(storm, clear.towards(storm, 1f))
     }
+
+    @Test
+    fun lightningStrikesOnlyInStormsAndBriefly() {
+        val right = Vec3(1f, 0f, 0f)
+        assertEquals(null, Lightning.bolt(2.34f, storm = 0f, cameraRight = right))
+        val bolt = Lightning.bolt(2.34f, storm = 1f, cameraRight = right)!!
+        assertEquals(0, bolt.size % (Lightning.STRIDE * 3))
+        assertEquals(null, Lightning.bolt(3.5f, storm = 1f, cameraRight = right))
+        // The same strike keeps its shape from frame to frame.
+        assertTrue(bolt.contentEquals(Lightning.bolt(2.34f, 1f, right)!!))
+    }
 }

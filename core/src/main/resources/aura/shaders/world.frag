@@ -7,6 +7,7 @@ in vec4 vShadow;
 uniform float uWet;
 uniform float uSnow;
 uniform float uWindowGlow;
+uniform float uRain;
 uniform float uDay;
 
 out vec4 fragColor;
@@ -60,8 +61,12 @@ void main() {
     } else if (abs(mat - 10.0) < 0.5) {
         color = albedo * (0.6 + 0.6 * ndl * sh) + albedo * 0.4 * (1.0 - uDay);
     } else if (porous) {
-        // Wet ground picks up a soft sheen.
+        // Wet ground picks up a soft sheen, and raindrops splash on flat ground.
         color += uLightColor * pow(max(dot(n, H), 0.0), 24.0) * sh * 0.35 * uWet * (1.0 - snowMask);
+        if (uRain > 0.01 && n.y > 0.9) {
+            float splash = length(ripples(vWorld.xz * 1.6));
+            color += (uSkyAmb + uLightColor * 0.3) * smoothstep(0.02, 0.06, splash) * 0.45 * uRain * (1.0 - snowMask);
+        }
     }
 
     color += albedo * uFlash * 0.5;

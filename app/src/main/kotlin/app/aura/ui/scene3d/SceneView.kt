@@ -59,6 +59,7 @@ class SceneView(context: Context, private val onFailure: (Throwable) -> Unit) : 
     private var yaw = 0f
     private var frameCount = 0
     private var mix: WeatherMix? = null
+    private var shown: Landmark? = null
     private var skyTop: Rgb? = null
     private var skyBottom: Rgb? = null
     private var width = 1
@@ -169,6 +170,11 @@ class SceneView(context: Context, private val onFailure: (Throwable) -> Unit) : 
         val dt = if (lastNanos == 0L) 0f else ((nanos - lastNanos) / 1e9f).coerceIn(0f, 0.1f)
         lastNanos = nanos
         if (!stillFrame) time += dt
+        // A new city swings in from the side.
+        if (shown != t.landmark) {
+            if (shown != null && !stillFrame && !dragging) dragYaw = 32f
+            shown = t.landmark
+        }
 
         // Ease into a new weather and sky instead of cutting.
         val goal = WeatherMix.of(t.condition)

@@ -13,6 +13,7 @@ object Shaders {
         Program("cloud", listOf("cloud.vert"), listOf("cloud.frag")),
         Program("sky", listOf("sky.vert"), listOf("sky.frag")),
         Program("particle", listOf("particle.vert"), listOf("particle.frag")),
+        Program("bolt", listOf("bolt.vert"), listOf("bolt.frag")),
     )
 
     fun source(name: String): String =

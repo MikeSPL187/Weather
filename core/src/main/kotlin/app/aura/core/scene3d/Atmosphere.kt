@@ -81,7 +81,15 @@ object Sky {
  * Everything one frame needs, as named shader uniforms. Both the Android renderer and the
  * browser preview bind this map as it is, so they draw the same picture.
  */
-class SceneFrame(val uniforms: Map<String, FloatArray>, val drawSun: Boolean, val drawMoon: Boolean, val rain: Float, val snow: Float)
+class SceneFrame(
+    val uniforms: Map<String, FloatArray>,
+    val drawSun: Boolean,
+    val drawMoon: Boolean,
+    val rain: Float,
+    val snow: Float,
+    /** Lightning ribbon triangles for this frame, or null. */
+    val bolt: FloatArray? = null,
+)
 
 /** The camera's view: an orbit around the island, nudged by the phone's tilt and the viewer's drag. */
 data class CameraPose(val yawDeg: Float = 0f, val pitchDeg: Float = 0f, val aspect: Float = 390f / 330f)
@@ -143,7 +151,7 @@ object Atmosphere {
 
         // Lightning: a short flash every few seconds in a storm, none on a still frame at t = 0.
         val cycle = (time + 2f) % 4.3f
-        val flash = if (w.storm > 0 && cycle < 0.16f) (1 - cycle / 0.16f) * w.storm else 0f
+        val flash = if (w.storm > 0 && cycle < 0.22f) (1 - cycle / 0.22f) * w.storm else 0f
 
         val ambientStrength = 0.34f + 0.3f * day
         val skyAmbient = skyBottom.mix(skyTop, 0.35f).mix(Rgb(0.62f, 0.66f, 0.76f), 0.45f) * ambientStrength + Rgb(1f, 1f, 1f) * (flash * 1.4f)
@@ -205,7 +213,7 @@ object Atmosphere {
             "uSnowFall" to f(w.snow),
             "uSlant" to f(0.08f + w.storm * 0.25f),
         )
-        return SceneFrame(u, drawSun = sunUp, drawMoon = elevation < 3, rain = w.rain, snow = w.snow)
+        return SceneFrame(u, drawSun = sunUp, drawMoon = elevation < 3, rain = w.rain, snow = w.snow, bolt = Lightning.bolt(time, w.storm, right))
     }
 }
 
@@ -240,3 +248,42 @@ class Particles(val vertices: FloatArray, val indices: IntArray) {
 /** A camera-facing quad for the sun and the moon. */
 val SkyQuad = floatArrayOf(-1f, -1f, 1f, -1f, 1f, 1f, -1f, 1f)
 
+
+/** A forked lightning bolt from the cloud base, as camera-facing ribbon triangles. */
+object Lightning {
+    const val STRIDE = 4 // x, y, z, across (−1…1)
+
+    /** The bolt to draw at [time], or null between strikes. Each strike has its own shape. */
+    fun bolt(time: Float, storm: Float, cameraRight: Vec3): FloatArray? {
+        if (storm <= 0f) return null
+        val cycle = (time + 2f) % 4.3f
+        if (cycle > 0.22f) return null
+        val strike = ((time + 2f) / 4.3f).toInt()
+        val r = Random(strike * 7919 + 1)
+        val out = ArrayList<Float>()
+        fun ribbon(points: List<Vec3>, width: Float) {
+            for (i in 0 until points.size - 1) {
+                val a = points[i]
+                val b = points[i + 1]
+                val wa = cameraRight * (width * (1 - i / points.size.toFloat() * 0.5f))
+                val wb = cameraRight * (width * (1 - (i + 1) / points.size.toFloat() * 0.5f))
+                val quad = listOf(a - wa to -1f, a + wa to 1f, b + wb to 1f, a - wa to -1f, b + wb to 1f, b - wb to -1f)
+                quad.forEach { (p, s) -> out += listOf(p.x, p.y, p.z, s) }
+            }
+        }
+        fun path(start: Vec3, end: Vec3, steps: Int, jag: Float): List<Vec3> = List(steps + 1) { i ->
+            val t = i / steps.toFloat()
+            val p = start + (end - start) * t
+            if (i == 0 || i == steps) p else p + Vec3((r.nextFloat() - 0.5f) * jag, 0f, (r.nextFloat() - 0.5f) * jag * 0.4f)
+        }
+        val x = (r.nextFloat() - 0.5f) * 4.5f
+        val start = Vec3(x, 3.4f, -0.8f + r.nextFloat() * 1.2f)
+        val end = Vec3(x + (r.nextFloat() - 0.5f) * 1.2f, if (kotlin.math.abs(x) < 2.2f) 0.05f else -1.6f, start.z + 0.3f)
+        val main = path(start, end, 10, 0.55f)
+        ribbon(main, 0.06f)
+        // One fork from the upper part of the bolt.
+        val from = main[3 + r.nextInt(3)]
+        ribbon(path(from, from + Vec3((r.nextFloat() - 0.5f) * 1.6f, -1.1f, 0f), 5, 0.35f), 0.036f)
+        return out.toFloatArray()
+    }
+}

@@ -65,3 +65,18 @@ vec3 toScreen(vec3 c) {
     c = c * (2.51 * c + 0.03) / (c * (2.43 * c + 0.59) + 0.14);
     return pow(clamp(c, 0.0, 1.0), vec3(1.0 / 2.2));
 }
+
+/** Expanding rings where raindrops land. */
+vec2 ripples(vec2 p) {
+    vec2 g = vec2(0.0);
+    for (int i = 0; i < 3; i++) {
+        vec2 cell = floor(p * 7.0 + float(i) * 0.37);
+        vec2 f = fract(p * 7.0 + float(i) * 0.37) - 0.5;
+        float h = fract(sin(dot(cell, vec2(12.9898, 78.233)) + float(i)) * 43758.5453);
+        float t = fract(uTime * 0.9 + h);
+        float d = length(f) - t * 0.5;
+        float ring = sin(d * 40.0) * exp(-abs(d) * 18.0) * (1.0 - t);
+        g += normalize(f + 0.0001) * ring;
+    }
+    return g * 0.12;
+}

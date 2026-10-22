@@ -67,15 +67,17 @@ class ScenePreviewExport {
             Triple("town-storm", tver, Condition.STORM to LocalDateTime.of(2026, 10, 22, 16, 40)),
             Triple("moscow-sunset", Cities.moscow, Condition.CLEAR to LocalDateTime.of(2026, 10, 22, 16, 55)),
             Triple("kazan-fog", Cities.kazan, Condition.FOG to LocalDateTime.of(2026, 10, 22, 8, 40)),
+            Triple("town-lightning", tver, Condition.STORM to LocalDateTime.of(2026, 10, 22, 16, 40)),
         )
         val entries = cases.map { (name, city, cw) ->
             val (condition, time) = cw
             val sun = SolarCalculator.position(city, time.toLocalDate(), time.hour * 60.0 + time.minute)
-            val frame = Atmosphere.frame(condition, sun, time = 3.1f)
+            // The lightning case lands just after a strike.
+            val frame = Atmosphere.frame(condition, sun, time = if (name == "town-lightning") 2.34f else 3.1f)
             val (top, bottom) = Sky.colors(condition, sun.elevationDeg)
             "\"$name\":{\"landmark\":\"${city.landmark.name}\",\"sun\":${frame.drawSun},\"moon\":${frame.drawMoon}," +
                 "\"skyTop\":\"#${"%06X".format(top and 0xFFFFFF)}\",\"skyBottom\":\"#${"%06X".format(bottom and 0xFFFFFF)}\"," +
-                "\"uniforms\":${json(frame.uniforms)}}"
+                "\"bolt\":[${frame.bolt?.joinToString(",") ?: ""}],\"uniforms\":${json(frame.uniforms)}}"
         }
         File(out, "cases.json").writeText(entries.joinToString(",", "{", "}"))
     }

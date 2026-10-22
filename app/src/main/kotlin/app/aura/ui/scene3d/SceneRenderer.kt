@@ -32,6 +32,9 @@ class SceneRenderer {
     private val models = HashMap<Landmark, Model>()
     private lateinit var particles: Gpu
     private lateinit var quad: Gpu
+    private var boltVao = 0
+    private var boltBuffer = 0
+    private var boltData: java.nio.FloatBuffer = ByteBuffer.allocateDirect(4096 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer()
     private var shadowTexture = 0
     private var shadowFbo = 0
     private var width = 1
@@ -51,6 +54,16 @@ class SceneRenderer {
         val drops = Particles.build()
         particles = upload(drops.vertices, drops.indices, intArrayOf(4, 1, 2))
         quad = upload(SkyQuad, intArrayOf(0, 1, 2, 0, 2, 3), intArrayOf(2))
+        val ids = IntArray(1)
+        GLES30.glGenVertexArrays(1, ids, 0)
+        boltVao = ids[0]
+        GLES30.glGenBuffers(1, ids, 0)
+        boltBuffer = ids[0]
+        GLES30.glBindVertexArray(boltVao)
+        GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, boltBuffer)
+        GLES30.glEnableVertexAttribArray(0)
+        GLES30.glVertexAttribPointer(0, 4, GLES30.GL_FLOAT, false, 16, 0)
+        GLES30.glBindVertexArray(0)
 
         val tex = IntArray(1)
         GLES30.glGenTextures(1, tex, 0)
@@ -220,6 +233,20 @@ class SceneRenderer {
         if (frame.snow > 0.01f) {
             bind("particle", u, mapOf("uAmount" to u.getValue("uSnowFall"), "uKind" to floatArrayOf(1f), "uTint" to floatArrayOf(1f, 1f, 1f)))
             draw(particles)
+        }
+        // 7. Lightning, added on top.
+        frame.bolt?.let { bolt ->
+            if (bolt.size > boltData.capacity()) boltData = ByteBuffer.allocateDirect(bolt.size * 4).order(ByteOrder.nativeOrder()).asFloatBuffer()
+            boltData.clear()
+            boltData.put(bolt).position(0)
+            GLES30.glBindVertexArray(boltVao)
+            GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, boltBuffer)
+            GLES30.glBufferData(GLES30.GL_ARRAY_BUFFER, bolt.size * 4, boltData, GLES30.GL_DYNAMIC_DRAW)
+            GLES30.glBlendFunc(GLES30.GL_ONE, GLES30.GL_ONE)
+            bind("bolt", u)
+            GLES30.glBindVertexArray(boltVao)
+            GLES30.glDrawArrays(GLES30.GL_TRIANGLES, 0, bolt.size / 4)
+            GLES30.glBlendFunc(GLES30.GL_ONE, GLES30.GL_ONE_MINUS_SRC_ALPHA)
         }
         GLES30.glDepthMask(true)
         GLES30.glBindVertexArray(0)

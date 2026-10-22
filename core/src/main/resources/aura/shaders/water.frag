@@ -10,21 +10,6 @@ uniform float uSnow;
 
 out vec4 fragColor;
 
-/** Expanding rings where raindrops land. */
-vec2 ripples(vec2 p) {
-    vec2 g = vec2(0.0);
-    for (int i = 0; i < 3; i++) {
-        vec2 cell = floor(p * 7.0 + float(i) * 0.37);
-        vec2 f = fract(p * 7.0 + float(i) * 0.37) - 0.5;
-        float h = fract(sin(dot(cell, vec2(12.9898, 78.233)) + float(i)) * 43758.5453);
-        float t = fract(uTime * 0.9 + h);
-        float d = length(f) - t * 0.5;
-        float ring = sin(d * 40.0) * exp(-abs(d) * 18.0) * (1.0 - t);
-        g += normalize(f + 0.0001) * ring;
-    }
-    return g * 0.12;
-}
-
 void main() {
     bool puddle = abs(vParams.x - 7.0) < 0.5;
     vec3 n = vec3(0.0, 1.0, 0.0);

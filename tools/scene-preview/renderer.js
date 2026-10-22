@@ -14,7 +14,7 @@ export async function createRenderer(canvas, base) {
     return s;
   }
   const programs = {};
-  for (const name of ['world', 'shadow', 'water', 'cloud', 'sky', 'particle']) {
+  for (const name of ['world', 'shadow', 'water', 'cloud', 'sky', 'particle', 'bolt']) {
     const p = gl.createProgram();
     gl.attachShader(p, compile(gl.VERTEX_SHADER, await text(name + '.vert')));
     gl.attachShader(p, compile(gl.FRAGMENT_SHADER, await text(name + '.frag')));
@@ -162,6 +162,20 @@ export async function createRenderer(canvas, base) {
     if (u.uSnowFall[0] > 0.01) {
       bind('particle', u, { uAmount: u.uSnowFall, uKind: [1], uTint: [1, 1, 1] });
       draw(particles);
+    }
+    // 7. Lightning, added on top.
+    if (frame.bolt && frame.bolt.length) {
+      const vao = gl.createVertexArray();
+      gl.bindVertexArray(vao);
+      const vb = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, vb);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(frame.bolt), gl.DYNAMIC_DRAW);
+      gl.enableVertexAttribArray(0);
+      gl.vertexAttribPointer(0, 4, gl.FLOAT, false, 16, 0);
+      gl.blendFunc(gl.ONE, gl.ONE);
+      bind('bolt', u);
+      gl.drawArrays(gl.TRIANGLES, 0, frame.bolt.length / 4);
+      gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
     }
     gl.depthMask(true);
     gl.finish();
