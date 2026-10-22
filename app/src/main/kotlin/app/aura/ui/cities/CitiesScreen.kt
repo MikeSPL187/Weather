@@ -44,7 +44,7 @@ import app.aura.core.format.Formatters
 import app.aura.core.model.City
 import app.aura.core.model.Condition
 import app.aura.ui.components.AuraIcons
-import app.aura.ui.components.ConditionOrb
+import app.aura.ui.components.WeatherIcon
 import app.aura.ui.theme.AuraColors
 import app.aura.ui.theme.AuraType
 
@@ -202,7 +202,7 @@ private fun CityCard(
             )
         }
         if (weather != null) {
-            ConditionOrb(weather.condition, isNight = weather.isNight, size = 34.dp)
+            WeatherIcon(weather.condition, isNight = weather.isNight, size = 40.dp)
             Spacer(Modifier.width(12.dp))
             Text(Formatters.temperature(weather.temperatureC), style = AuraType.Title, color = AuraColors.TextPrimary)
         }

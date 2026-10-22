@@ -57,7 +57,7 @@ object ActivityPlanner {
             val time = hour.time.toLocalTime()
             val golden = listOfNotNull(sunrise, sunset).any { abs(minutesBetween(it, time)) <= 60 }
             s += if (golden) 2.0 else -3.0
-            if (hour.condition == Condition.CLEAR || hour.condition == Condition.CLOUDY) s += 1.0
+            if (hour.condition == Condition.CLEAR || hour.condition == Condition.PARTLY_CLOUDY) s += 1.0
         }
         return s.coerceIn(0.0, 10.0).roundToInt()
     }

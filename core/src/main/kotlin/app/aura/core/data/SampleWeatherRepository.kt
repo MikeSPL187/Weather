@@ -33,8 +33,8 @@ class SampleWeatherRepository : WeatherRepository {
     )
 
     private val dayPattern = listOf(
-        Condition.CLEAR, Condition.CLOUDY, Condition.RAIN, Condition.RAIN, Condition.CLOUDY,
-        Condition.CLEAR, Condition.CLEAR, Condition.CLOUDY, Condition.SNOW, Condition.CLOUDY,
+        Condition.CLEAR, Condition.PARTLY_CLOUDY, Condition.RAIN, Condition.RAIN, Condition.CLOUDY,
+        Condition.CLEAR, Condition.PARTLY_CLOUDY, Condition.CLOUDY, Condition.SNOW, Condition.CLOUDY,
     )
 
     override suspend fun forecast(city: City, now: LocalDateTime): Forecast = forecast(city, now, todayCondition = null)

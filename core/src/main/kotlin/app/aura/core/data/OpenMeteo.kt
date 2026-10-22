@@ -31,8 +31,9 @@ import kotlinx.serialization.json.jsonPrimitive
 
 /** WMO weather interpretation codes, as returned by Open-Meteo, mapped to the scene's conditions. */
 fun conditionForWmo(code: Int): Condition = when (code) {
-    0, 1 -> Condition.CLEAR
-    2, 3 -> Condition.CLOUDY
+    0 -> Condition.CLEAR
+    1, 2 -> Condition.PARTLY_CLOUDY
+    3 -> Condition.CLOUDY
     45, 48 -> Condition.FOG
     in 51..67, in 80..82 -> Condition.RAIN
     in 71..77, 85, 86 -> Condition.SNOW

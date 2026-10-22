@@ -99,6 +99,8 @@ class OpenMeteoParserTest {
     @Test
     fun wmoCodes() {
         assertEquals(Condition.CLEAR, conditionForWmo(0))
+        assertEquals(Condition.PARTLY_CLOUDY, conditionForWmo(2))
+        assertEquals(Condition.CLOUDY, conditionForWmo(3))
         assertEquals(Condition.FOG, conditionForWmo(45))
         assertEquals(Condition.RAIN, conditionForWmo(81))
         assertEquals(Condition.SNOW, conditionForWmo(86))

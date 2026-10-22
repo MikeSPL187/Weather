@@ -59,6 +59,8 @@ data class WeatherUiState(
     /** Set while the viewer previews other weather on the scene; the forecast itself is unchanged. */
     val preview: Condition? = null,
     val loading: Boolean = true,
+    /** A pull-to-refresh is in flight; the current forecast stays on screen meanwhile. */
+    val refreshing: Boolean = false,
     val error: String? = null,
     val updatedAt: LocalTime? = null,
     val outfit: Outfit? = null,
@@ -150,6 +152,15 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun retry() = select(_state.value.city)
+
+    fun refresh() {
+        val city = _state.value.city
+        _state.update { it.copy(refreshing = true) }
+        viewModelScope.launch {
+            load(city)
+            _state.update { it.copy(refreshing = false) }
+        }
+    }
 
     /** Long press on the scene: cycles through every weather so the 3D states can be previewed. */
     fun cyclePreview() {

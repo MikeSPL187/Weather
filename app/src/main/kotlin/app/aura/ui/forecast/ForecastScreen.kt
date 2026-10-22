@@ -42,7 +42,7 @@ import app.aura.WeatherUiState
 import app.aura.core.format.Formatters
 import app.aura.core.model.DailyForecast
 import app.aura.ui.components.AuraIcons
-import app.aura.ui.components.ConditionOrb
+import app.aura.ui.components.WeatherIcon
 import app.aura.ui.components.GlassCard
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
@@ -90,6 +90,7 @@ fun ForecastScreen(state: WeatherUiState, contentPadding: PaddingValues) {
                 rangeMax = max,
                 expanded = open == index,
                 onToggle = { open = if (open == index) -1 else index },
+                currentC = if (index == 0) forecast.current.temperatureC else null,
             )
         }
     }
@@ -111,6 +112,8 @@ private fun DayRow(
     rangeMax: Double,
     expanded: Boolean,
     onToggle: () -> Unit,
+    /** Today's row marks where the current temperature sits within the day's range. */
+    currentC: Double? = null,
 ) {
     val shape = RoundedCornerShape(20.dp)
     Column(
@@ -131,7 +134,7 @@ private fun DayRow(
                 Text(label, style = AuraType.CardTitle, color = AuraColors.TextPrimary)
                 Text(Formatters.shortDate(day.date), style = AuraType.Caption, color = AuraColors.TextSecondary)
             }
-            ConditionOrb(day.condition, size = 28.dp)
+            WeatherIcon(day.condition, size = 32.dp)
             Text(
                 if (day.precipitationChancePercent > 0) "${day.precipitationChancePercent} %" else "",
                 style = AuraType.Caption,
@@ -140,17 +143,24 @@ private fun DayRow(
                 textAlign = TextAlign.End,
             )
             Text(Formatters.temperature(day.minC), style = AuraType.Body, color = AuraColors.TextSecondary, modifier = Modifier.width(38.dp), textAlign = TextAlign.End)
-            Canvas(Modifier.weight(1f).height(6.dp).padding(horizontal = 8.dp)) {
+            Canvas(Modifier.weight(1f).height(10.dp).padding(horizontal = 8.dp)) {
+                val barH = 6.dp.toPx()
+                val top = (size.height - barH) / 2
                 val span = (rangeMax - rangeMin).coerceAtLeast(1.0)
                 val start = ((day.minC - rangeMin) / span).toFloat() * size.width
                 val end = ((day.maxC - rangeMin) / span).toFloat() * size.width
-                drawRoundRect(Color.White.copy(alpha = 0.12f), cornerRadius = CornerRadius(size.height / 2))
+                drawRoundRect(Color.White.copy(alpha = 0.12f), topLeft = Offset(0f, top), size = Size(size.width, barH), cornerRadius = CornerRadius(barH / 2))
                 drawRoundRect(
                     brush = Brush.horizontalGradient(listOf(temperatureColor(day.minC), temperatureColor(day.maxC)), startX = start, endX = end),
-                    topLeft = Offset(start, 0f),
-                    size = Size(end - start, size.height),
-                    cornerRadius = CornerRadius(size.height / 2),
+                    topLeft = Offset(start, top),
+                    size = Size((end - start).coerceAtLeast(barH), barH),
+                    cornerRadius = CornerRadius(barH / 2),
                 )
+                currentC?.let { c ->
+                    val x = (((c - rangeMin) / span).toFloat() * size.width).coerceIn(start, end)
+                    drawCircle(AuraColors.Ink, radius = size.height / 2 + 1.dp.toPx(), center = Offset(x, size.height / 2))
+                    drawCircle(Color.White, radius = size.height / 2 - 1.dp.toPx(), center = Offset(x, size.height / 2))
+                }
             }
             Text(Formatters.temperature(day.maxC), style = AuraType.CardTitle, color = AuraColors.TextPrimary, modifier = Modifier.width(34.dp))
         }

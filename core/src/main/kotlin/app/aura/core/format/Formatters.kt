@@ -22,6 +22,7 @@ object Formatters {
 
     fun condition(condition: Condition, isNight: Boolean = false): String = when (condition) {
         Condition.CLEAR -> if (isNight) "Ясно, звёздное небо" else "Солнечно"
+        Condition.PARTLY_CLOUDY -> "Переменная облачность"
         Condition.CLOUDY -> "Облачно"
         Condition.RAIN -> "Небольшой дождь"
         Condition.STORM -> "Гроза"

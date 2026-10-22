@@ -51,6 +51,7 @@ fun WeatherScene(
 ) {
     val reduceMotion = rememberReduceMotion()
     var time by remember { mutableFloatStateOf(0f) }
+    val tilt by rememberTilt(enabled = !reduceMotion)
     if (!reduceMotion) {
         LaunchedEffect(Unit) {
             val start = withFrameNanos { it }
@@ -65,7 +66,7 @@ fun WeatherScene(
             .semantics { contentDescription = description }
             .combinedClickable(onLongClickLabel = "Предпросмотр другой погоды", onLongClick = onLongPress, onClick = {}),
     ) {
-        val world = World(this, scene, time, reduceMotion)
+        val world = World(this, scene, time, reduceMotion, tilt)
         world.draw(particles)
     }
 }
@@ -81,6 +82,7 @@ private fun rememberReduceMotion(): Boolean {
 private fun sceneDescription(scene: SceneState): String {
     val sky = when (scene.condition) {
         Condition.CLEAR -> if (scene.isNight) "звёздное небо и луна" else "солнце в ясном небе"
+        Condition.PARTLY_CLOUDY -> if (scene.isNight) "луна среди облаков" else "солнце и облака"
         Condition.CLOUDY -> "облака"
         Condition.RAIN -> "тучи, дождь и лужи"
         Condition.STORM -> "грозовые тучи, ливень и молнии"
@@ -108,7 +110,7 @@ fun skyBrush(scene: SceneState?): Brush {
     return Brush.verticalGradient(listOf(top, lerp(top, bottom, 0.55f), bottom))
 }
 
-private fun skyColors(scene: SceneState): Pair<Color, Color> {
+fun skyColors(scene: SceneState): Pair<Color, Color> {
     val day = dayFactor(scene.sun.elevationDeg)
     val dusk = twilight(scene.sun.elevationDeg)
     var top = lerp(Color(0xFF04071A), Color(0xFF1D4ED8), day)
@@ -119,6 +121,7 @@ private fun skyColors(scene: SceneState): Pair<Color, Color> {
         Condition.RAIN, Condition.STORM -> 0.8f
         Condition.SNOW -> 0.55f
         Condition.CLOUDY, Condition.FOG -> 0.45f
+        Condition.PARTLY_CLOUDY -> 0.1f
         Condition.CLEAR -> 0f
     }
     top = lerp(top, lerp(Color(0xFF0C101C), Color(0xFF2A3650), day), grey)
@@ -136,7 +139,7 @@ private class Particles(random: Random) {
 private const val INK = 0xFF151A33
 
 /** One frame of the diorama. Holds the derived lighting so every element shades consistently. */
-private class World(val ds: DrawScope, val scene: SceneState, val time: Float, val still: Boolean) {
+private class World(val ds: DrawScope, val scene: SceneState, val time: Float, val still: Boolean, val tilt: Offset) {
     val w = ds.size.width
     val h = ds.size.height
     val u = w / 390f
@@ -150,6 +153,7 @@ private class World(val ds: DrawScope, val scene: SceneState, val time: Float, v
     val dusk = twilight(scene.sun.elevationDeg)
     val overcast = when (scene.condition) {
         Condition.CLEAR -> 0f
+        Condition.PARTLY_CLOUDY -> 0.25f
         Condition.CLOUDY, Condition.FOG -> 0.55f
         else -> 0.85f
     }
@@ -176,14 +180,22 @@ private class World(val ds: DrawScope, val scene: SceneState, val time: Float, v
     val windowLit = Color(0xFFFFD68A)
     val windowsOn = day < 0.55f
 
+    /** Layers further away move less when the phone tilts, which reads as depth. */
+    fun DrawScope.layer(depth: Float, block: DrawScope.() -> Unit) =
+        translate(left = tilt.x * depth * 14 * u, top = tilt.y * depth * 8 * u, block = block)
+
     fun draw(p: Particles) = with(ds) {
-        if (day < 0.5f && overcast < 0.6f) stars(p)
-        celestial()
-        clouds(front = false)
-        island()
-        clipPath(groundClip()) { shadowsAndGround(p) }
-        landmark()
-        clouds(front = true)
+        layer(-1.0f) {
+            if (day < 0.5f && overcast < 0.6f) stars(p)
+            celestial()
+        }
+        layer(-0.6f) { clouds(front = false) }
+        layer(0.15f) {
+            island()
+            clipPath(groundClip()) { shadowsAndGround(p) }
+            landmark()
+        }
+        layer(0.9f) { clouds(front = true) }
         when (scene.condition) {
             Condition.RAIN -> rain(p, heavy = false)
             Condition.STORM -> {
@@ -271,6 +283,7 @@ private class World(val ds: DrawScope, val scene: SceneState, val time: Float, v
         val dark = wet
         val layout = when (scene.condition) {
             Condition.CLEAR -> if (front) listOf(Triple(300f, 210f, 0.75f)) else listOf(Triple(80f, 90f, 0.55f))
+            Condition.PARTLY_CLOUDY -> if (front) listOf(Triple(290f, 190f, 0.95f), Triple(96f, 168f, 0.7f)) else listOf(Triple(70f, 80f, 0.75f), Triple(330f, 70f, 0.6f))
             Condition.FOG -> if (front) emptyList() else listOf(Triple(110f, 80f, 0.9f), Triple(300f, 120f, 0.75f))
             Condition.CLOUDY, Condition.SNOW -> if (front) listOf(Triple(110f, 150f, 0.95f), Triple(300f, 120f, 0.85f))
             else listOf(Triple(60f, 70f, 0.8f), Triple(330f, 60f, 0.9f), Triple(200f, 92f, 1.05f))

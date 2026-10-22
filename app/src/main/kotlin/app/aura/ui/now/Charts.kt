@@ -20,6 +20,10 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.rememberTextMeasurer
+import java.time.LocalTime
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.semantics.contentDescription
@@ -30,7 +34,7 @@ import app.aura.core.format.Formatters
 import app.aura.core.model.HourlyForecast
 import app.aura.core.model.Nowcast
 import app.aura.core.nowcast.DRY_THRESHOLD_MM_H
-import app.aura.ui.components.ConditionOrb
+import app.aura.ui.components.WeatherIcon
 import app.aura.ui.theme.AuraColors
 import app.aura.ui.theme.AuraType
 
@@ -86,9 +90,11 @@ fun NowcastChart(nowcast: Nowcast, modifier: Modifier = Modifier) {
  * Each column holds the time, a condition orb, the temperature and the chance of rain.
  */
 @Composable
-fun HourlyChart(hours: List<HourlyForecast>, modifier: Modifier = Modifier) {
+fun HourlyChart(hours: List<HourlyForecast>, sunrise: LocalTime?, sunset: LocalTime?, modifier: Modifier = Modifier) {
     if (hours.isEmpty()) return
     val column = 56.dp
+    val measurer = rememberTextMeasurer()
+    val markerStyle = AuraType.Caption.copy(color = Color(0xFFFFD58F))
     val min = hours.minOf { it.temperatureC }
     val max = hours.maxOf { it.temperatureC }
     Box(modifier.horizontalScroll(rememberScrollState())) {
@@ -97,12 +103,39 @@ fun HourlyChart(hours: List<HourlyForecast>, modifier: Modifier = Modifier) {
                 hours.forEachIndexed { i, hour ->
                     Column(Modifier.width(column), horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(if (i == 0) "Сейчас" else Formatters.time(hour.time.toLocalTime()), style = AuraType.Caption, color = AuraColors.TextSecondary)
-                        Box(Modifier.padding(vertical = 8.dp)) { ConditionOrb(hour.condition, isNight = !hour.isDay) }
+                        Box(Modifier.padding(vertical = 8.dp)) { WeatherIcon(hour.condition, isNight = !hour.isDay) }
                     }
                 }
             }
             Canvas(Modifier.width(column * hours.size).height(86.dp)) {
                 val colW = size.width / hours.size
+                // Night hours sit on a darker band.
+                val night = Color(0x1C000020)
+                hours.forEachIndexed { i, hour ->
+                    if (hour.isDay) return@forEachIndexed
+                    val prevDay = hours.getOrNull(i - 1)?.isDay == true
+                    val nextDay = hours.getOrNull(i + 1)?.isDay == true
+                    // Fade in and out at dusk and dawn instead of a hard edge.
+                    val colors = listOf(if (prevDay) Color.Transparent else night, night, if (nextDay) Color.Transparent else night)
+                    drawRect(
+                        Brush.horizontalGradient(colors, startX = colW * i, endX = colW * (i + 1)),
+                        topLeft = Offset(colW * i, 12.dp.toPx()),
+                        size = Size(colW, size.height - 12.dp.toPx()),
+                    )
+                }
+                // Sunrise and sunset at their exact minute, Apple-style.
+                hours.forEachIndexed { i, hour ->
+                    listOfNotNull(sunrise?.let { it to "↑" }, sunset?.let { it to "↓" }).forEach { (event, arrow) ->
+                        val start = hour.time.toLocalTime()
+                        val minutes = (event.toSecondOfDay() - start.toSecondOfDay()) / 60
+                        if (minutes in 0 until 60) {
+                            val x = colW * (i + minutes / 60f)
+                            drawLine(Color(0x99FFD58F), Offset(x, 14.dp.toPx()), Offset(x, size.height), strokeWidth = 1.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(4f, 6f)))
+                            val label = measurer.measure("$arrow${Formatters.time(event)}", markerStyle)
+                            drawText(label, topLeft = Offset((x - label.size.width / 2).coerceIn(0f, size.width - label.size.width), 0f))
+                        }
+                    }
+                }
                 val labelSpace = 20.dp.toPx()
                 val curveTop = labelSpace
                 val curveBottom = size.height * 0.62f

@@ -19,7 +19,7 @@ data class City(
 /** Which island diorama the scene draws for a city. */
 enum class Landmark { MOSCOW_HIGHRISE, PETERSBURG_SPIRE, KAZAN_MOSQUE, ALMATY_MOUNTAINS, GENERIC_TOWN }
 
-enum class Condition { CLEAR, CLOUDY, RAIN, STORM, SNOW, FOG }
+enum class Condition { CLEAR, PARTLY_CLOUDY, CLOUDY, RAIN, STORM, SNOW, FOG }
 
 data class CurrentWeather(
     val temperatureC: Double,

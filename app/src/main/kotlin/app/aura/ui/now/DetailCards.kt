@@ -148,19 +148,63 @@ fun DetailCards(state: WeatherUiState, modifier: Modifier = Modifier) {
                     style = AuraType.Caption, color = AuraColors.TextSecondary,
                 )
             }
-            DetailCard(if (now.airQualityIndex != null) "Воздух" else "Видимость", Modifier.weight(1f)) {
-                val aqi = now.airQualityIndex
-                if (aqi != null) {
+            val next24 = forecast.hourly.take(24)
+            val total = next24.sumOf { it.precipitationMm }
+            val firstWet = next24.firstOrNull { it.precipitationMm >= 0.1 || it.precipitationChancePercent >= 50 }
+            DetailCard("Осадки", Modifier.weight(1f)) {
+                BigValue(if (total < 0.05) "0" else "%.1f".format(total), "мм за 24 ч")
+                Text(
+                    when {
+                        firstWet == null -> "Сухо ближайшие сутки"
+                        firstWet == next24.first() -> "Идут сейчас"
+                        else -> "Ожидаются с ${Formatters.time(firstWet.time.toLocalTime())}"
+                    },
+                    style = AuraType.Caption, color = AuraColors.TextSecondary,
+                )
+                PrecipitationStrip(next24.map { it.precipitationChancePercent })
+            }
+        }
+        Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            now.airQualityIndex?.let { aqi ->
+                DetailCard("Воздух", Modifier.weight(1f)) {
                     AqiRing(aqi, Modifier.size(64.dp))
                     Text(aqiLabel(aqi), style = AuraType.CardTitle, color = AuraColors.TextPrimary)
                     Text("Европейский индекс AQI", style = AuraType.Caption, color = AuraColors.TextSecondary)
-                } else {
-                    BigValue(now.visibilityKm?.let { "${it.roundToInt()}" } ?: "—", "км")
-                }
-                now.visibilityKm?.takeIf { aqi != null }?.let {
-                    Text("Видимость ${it.roundToInt()} км", style = AuraType.Caption, color = AuraColors.TextSecondary)
                 }
             }
+            DetailCard("Видимость", Modifier.weight(1f)) {
+                val km = now.visibilityKm
+                BigValue(km?.let { if (it < 1) "%.1f".format(it) else "${it.roundToInt()}" } ?: "—", "км")
+                Text(
+                    when {
+                        km == null -> "Нет данных"
+                        km < 1 -> "Густой туман, будьте осторожны на дороге"
+                        km < 5 -> "Дымка или осадки"
+                        km < 20 -> "Хорошая видимость"
+                        else -> "Отличная видимость"
+                    },
+                    style = AuraType.Caption, color = AuraColors.TextSecondary,
+                )
+            }
+        }
+    }
+}
+
+/** Chance of precipitation for each of the next 24 hours as a thin bar strip. */
+@Composable
+private fun PrecipitationStrip(chances: List<Int>) {
+    Canvas(Modifier.fillMaxWidth().height(28.dp)) {
+        if (chances.isEmpty()) return@Canvas
+        val gap = 1.5.dp.toPx()
+        val w = (size.width - gap * (chances.size - 1)) / chances.size
+        chances.forEachIndexed { i, chance ->
+            val h = (size.height * chance / 100f).coerceAtLeast(2.dp.toPx())
+            drawRoundRect(
+                Color(0xFF6FE3FF).copy(alpha = if (chance >= 30) 0.85f else 0.3f),
+                topLeft = Offset(i * (w + gap), size.height - h),
+                size = Size(w, h),
+                cornerRadius = CornerRadius(1.5.dp.toPx()),
+            )
         }
     }
 }
