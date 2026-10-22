@@ -78,27 +78,35 @@ class WeatherViewModel(
             val next = Condition.entries[(base.ordinal + 1) % Condition.entries.size]
             current.copy(demoCondition = next, scene = current.scene?.copy(condition = next))
         }
+        viewModelScope.launch { refresh(_state.value.city) }
     }
 
     private suspend fun refresh(city: City) {
         val now = LocalDateTime.ofInstant(clock(), ZoneOffset.ofHours(city.utcOffsetHours))
-        val forecast = repository.forecast(city, now)
-        val minutes = now.hour * 60 + now.minute + now.second / 60.0
-        val sun = SolarCalculator.position(city, now.toLocalDate(), minutes)
-        _state.update { current ->
-            val condition = current.demoCondition ?: forecast.current.condition
-            current.copy(
-                city = city,
-                localTime = now,
-                forecast = forecast,
-                sunTimes = SolarCalculator.sunTimes(city, now.toLocalDate()),
-                nowcast = NowcastSummarizer.summarize(forecast.nowcast),
-                scene = SceneState(condition, sun, city),
-            )
-        }
+        val demo = _state.value.demoCondition
+        // Demo mode regenerates the sample day so the nowcast and hourly strip match the scene.
+        val forecast = (repository as? SampleWeatherRepository)?.forecast(city, now, demo)
+            ?: repository.forecast(city, now)
+        _state.update { buildUiState(forecast, now, demo) }
     }
 
     private companion object {
         const val REFRESH_MS = 30_000L
     }
+}
+
+/** Derives everything the screens show from one forecast at the city's local time [now]. */
+fun buildUiState(forecast: Forecast, now: LocalDateTime, demoCondition: Condition? = null): WeatherUiState {
+    val city = forecast.city
+    val minutes = now.hour * 60 + now.minute + now.second / 60.0
+    val sun = SolarCalculator.position(city, now.toLocalDate(), minutes)
+    return WeatherUiState(
+        city = city,
+        localTime = now,
+        forecast = forecast,
+        sunTimes = SolarCalculator.sunTimes(city, now.toLocalDate()),
+        nowcast = NowcastSummarizer.summarize(forecast.nowcast),
+        scene = SceneState(demoCondition ?: forecast.current.condition, sun, city),
+        demoCondition = demoCondition,
+    )
 }

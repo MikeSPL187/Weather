@@ -49,6 +49,8 @@ data class DailyForecast(
     val humidityPercent: Int,
 )
 
+enum class PrecipitationKind { RAIN, SNOW }
+
 /**
  * Precipitation for the next two hours in fixed steps, starting at [start].
  * Intensities are in millimetres per hour.
@@ -58,6 +60,7 @@ data class Nowcast(
     val stepMinutes: Int,
     val intensitiesMmH: List<Double>,
     val confidencePercent: Int,
+    val kind: PrecipitationKind = PrecipitationKind.RAIN,
 )
 
 data class Forecast(

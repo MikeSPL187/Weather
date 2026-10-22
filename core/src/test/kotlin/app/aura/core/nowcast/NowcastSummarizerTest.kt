@@ -1,6 +1,7 @@
 package app.aura.core.nowcast
 
 import app.aura.core.model.Nowcast
+import app.aura.core.model.PrecipitationKind
 import java.time.LocalTime
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -32,6 +33,12 @@ class NowcastSummarizerTest {
         val summary = NowcastSummarizer.summarize(nowcast(*DoubleArray(24) { 0.05 }))
         assertEquals("Без осадков в ближайшие 2 часа", summary.headline)
         assertNull(summary.minutesUntilChange)
+    }
+
+    @Test
+    fun snowUsesItsOwnNoun() {
+        val snow = Nowcast(LocalTime.of(9, 0), 5, listOf(0.0, 0.0, 0.6, 0.8), 81, PrecipitationKind.SNOW)
+        assertEquals("Снег начнётся через 10 мин", NowcastSummarizer.summarize(snow).headline)
     }
 
     @Test

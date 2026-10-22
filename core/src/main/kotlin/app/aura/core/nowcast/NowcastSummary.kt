@@ -1,6 +1,7 @@
 package app.aura.core.nowcast
 
 import app.aura.core.model.Nowcast
+import app.aura.core.model.PrecipitationKind
 
 /** Rain lighter than this is treated as dry: it does not wet clothes or roads. */
 const val DRY_THRESHOLD_MM_H = 0.1
@@ -14,25 +15,26 @@ data class NowcastSummary(
 
 /**
  * Turns minute-by-minute precipitation into the one sentence the home screen shows,
- * for example "Дождь закончится через 25 мин".
+ * for example "Дождь закончится через 25 мин" or "Снег начнётся через 10 мин".
  */
 object NowcastSummarizer {
     fun summarize(nowcast: Nowcast): NowcastSummary {
         val steps = nowcast.intensitiesMmH
         require(steps.isNotEmpty()) { "Nowcast has no steps" }
         val windowMinutes = steps.size * nowcast.stepMinutes
+        val noun = if (nowcast.kind == PrecipitationKind.SNOW) "Снег" else "Дождь"
         val rainingNow = steps.first() >= DRY_THRESHOLD_MM_H
         val changeIndex = steps.indexOfFirst { (it >= DRY_THRESHOLD_MM_H) != rainingNow }
 
         if (changeIndex < 0) {
-            val headline = if (rainingNow) "Дождь не прекратится ${window(windowMinutes)}"
+            val headline = if (rainingNow) "$noun не прекратится ${window(windowMinutes)}"
             else "Без осадков ${window(windowMinutes)}"
             return NowcastSummary(headline, null, rainingNow)
         }
 
         val minutes = changeIndex * nowcast.stepMinutes
-        val headline = if (rainingNow) "Дождь закончится через $minutes мин"
-        else "Дождь начнётся через $minutes мин"
+        val headline = if (rainingNow) "$noun закончится через $minutes мин"
+        else "$noun начнётся через $minutes мин"
         return NowcastSummary(headline, minutes, rainingNow)
     }
 

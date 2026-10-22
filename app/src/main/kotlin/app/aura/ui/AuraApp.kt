@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import app.aura.WeatherUiState
 import app.aura.WeatherViewModel
 import app.aura.ui.cities.CitiesScreen
 import app.aura.ui.components.Tab
@@ -44,6 +45,24 @@ fun AuraApp(viewModel: WeatherViewModel = viewModel()) {
         return
     }
 
+    AuraScaffold(
+        state = state,
+        tab = tab,
+        onTabChange = { tab = it },
+        onOpenCities = { showCities = true },
+        onSceneTap = viewModel::cycleDemoCondition,
+    )
+}
+
+/** Sky background, the current tab and the floating tab bar; stateless so screenshots can render it. */
+@Composable
+fun AuraScaffold(
+    state: WeatherUiState,
+    tab: Tab,
+    onTabChange: (Tab) -> Unit,
+    onOpenCities: () -> Unit,
+    onSceneTap: () -> Unit,
+) {
     // Space the floating tab bar occupies, so scrolling content clears it.
     val barPadding = PaddingValues(bottom = 68.dp + 22.dp + 16.dp)
     Box(
@@ -54,8 +73,8 @@ fun AuraApp(viewModel: WeatherViewModel = viewModel()) {
         when (tab) {
             Tab.NOW -> NowScreen(
                 state = state,
-                onOpenCities = { showCities = true },
-                onSceneTap = viewModel::cycleDemoCondition,
+                onOpenCities = onOpenCities,
+                onSceneTap = onSceneTap,
                 contentPadding = barPadding,
             )
             Tab.FORECAST -> ForecastScreen(state, barPadding)
@@ -72,7 +91,7 @@ fun AuraApp(viewModel: WeatherViewModel = viewModel()) {
         }
         TabBar(
             selected = tab,
-            onSelect = { tab = it },
+            onSelect = onTabChange,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .navigationBarsPadding()

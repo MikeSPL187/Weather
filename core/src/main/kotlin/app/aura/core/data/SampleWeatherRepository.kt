@@ -7,6 +7,7 @@ import app.aura.core.model.DailyForecast
 import app.aura.core.model.Forecast
 import app.aura.core.model.HourlyForecast
 import app.aura.core.model.Nowcast
+import app.aura.core.model.PrecipitationKind
 import java.time.LocalDateTime
 import java.time.LocalTime
 import kotlin.math.PI
@@ -43,11 +44,14 @@ class SampleWeatherRepository : WeatherRepository {
         Condition.FOG to "Туман утром, к обеду рассеется.",
     )
 
-    override suspend fun forecast(city: City, now: LocalDateTime): Forecast {
+    override suspend fun forecast(city: City, now: LocalDateTime): Forecast = forecast(city, now, todayCondition = null)
+
+    /** Same sample forecast, but with today's weather forced to [todayCondition] for the demo mode. */
+    fun forecast(city: City, now: LocalDateTime, todayCondition: Condition?): Forecast {
         val climate = climates[city.id] ?: Climate(5.0, 4.0)
         val random = Random(city.id.hashCode() * 31 + now.toLocalDate().toEpochDay().toInt())
         val offset = (now.toLocalDate().toEpochDay() % dayPattern.size).toInt()
-        val conditions = List(10) { dayPattern[(it + offset) % dayPattern.size] }
+        val conditions = List(10) { if (it == 0 && todayCondition != null) todayCondition else dayPattern[(it + offset) % dayPattern.size] }
         val today = conditions.first()
 
         fun tempAt(hour: Double, dayIndex: Int = 0): Double {
@@ -111,6 +115,7 @@ class SampleWeatherRepository : WeatherRepository {
             stepMinutes = stepMinutes,
             intensitiesMmH = intensities,
             confidencePercent = if (today == Condition.CLEAR) 94 else 87,
+            kind = if (today == Condition.SNOW) PrecipitationKind.SNOW else PrecipitationKind.RAIN,
         )
         return Forecast(city, current, hourly, daily, nowcast)
     }

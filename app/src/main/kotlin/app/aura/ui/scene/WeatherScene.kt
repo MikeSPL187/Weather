@@ -149,11 +149,12 @@ private fun DrawScope.drawStars(p: Particles, time: Float, alpha: Float) {
     }
 }
 
-private fun DrawScope.orb(center: Offset, radius: Float, colors: List<Color>) {
+private fun DrawScope.orb(center: Offset, radius: Float, colors: List<Color>, alpha: Float = 1f) {
     drawCircle(
         brush = Brush.radialGradient(colors, center = center + Offset(-radius * 0.3f, -radius * 0.4f), radius = radius * 1.4f),
         radius = radius,
         center = center,
+        alpha = alpha,
     )
 }
 
@@ -174,7 +175,8 @@ private fun DrawScope.drawSunAndMoon(scene: SceneState, horizonY: Float, u: Floa
             center = center,
         )
         val warm = twilight(scene.sun.elevationDeg)
-        orb(center, 62 * u, listOf(Color(0xFFFFF8D6), lerp(Color(0xFFFFC94A), Color(0xFFFF8A4A), warm), Color(0xFFE2701A)))
+        // Behind rain or snow clouds the disc fades to a dim glow.
+        orb(center, 62 * u, listOf(Color(0xFFFFF8D6), lerp(Color(0xFFFFC94A), Color(0xFFFF8A4A), warm), Color(0xFFE2701A)), alpha = 1 - overcast * 0.8f)
     } else {
         val y = (horizonY - sin(-el).toFloat() * lift).coerceAtLeast(minY)
         val center = Offset(size.width - sunX, y)
@@ -183,7 +185,7 @@ private fun DrawScope.drawSunAndMoon(scene: SceneState, horizonY: Float, u: Floa
             radius = 90 * u,
             center = center,
         )
-        orb(center, 46 * u, listOf(Color.White, Color(0xFFE9ECF7), Color(0xFFA8AFCB)))
+        orb(center, 46 * u, listOf(Color.White, Color(0xFFE9ECF7), Color(0xFFA8AFCB)), alpha = 1 - overcast * 0.8f)
     }
 }
 

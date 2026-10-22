@@ -19,7 +19,9 @@ Kotlin + Jetpack Compose, minSdk 26, targetSdk 35.
 | `core` | Чистый Kotlin: модели погоды, расчёт положения солнца (NOAA), сводка «дождь закончится через N мин», форматирование на русском, уровни качества 3D, тестовые данные для 4 городов. Покрыт unit-тестами |
 | `app` | Экраны «Сейчас» (сцена «Живая диорама» на Compose Canvas, температура, прогноз осадков, почасовая лента), «Прогноз» на 10 дней, выбор города, таб-бар. «Карта» и «Ассистент» пока заглушки |
 
-Сборка: `./gradlew :core:test :app:assembleDebug` (нужен Android SDK 35 и JDK 17). Готовый debug-APK собирает GitHub Actions (`.github/workflows/android.yml`), его можно скачать из артефактов запуска.
+Сборка: `./gradlew :core:test :app:assembleDebug` (нужен Android SDK 35 и JDK 17).
+
+Скриншот-тесты Paparazzi рендерят экраны без устройства: `./gradlew :app:recordPaparazziDebug` записывает эталоны в `app/src/test/snapshots/images/`, `:app:verifyPaparazziDebug` сверяет с ними. Готовый debug-APK собирает GitHub Actions (`.github/workflows/android.yml`), его можно скачать из артефактов запуска.
 
 Данные пока тестовые (`SampleWeatherRepository`): реального прогноза нет. Нажатие на сцену переключает погоду в демо-режиме. Сцену на Canvas позже заменит 3D-рендер на Filament за тем же `SceneState`.
 

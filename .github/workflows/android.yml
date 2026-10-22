@@ -17,8 +17,8 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
-      - name: Unit tests and debug APK
-        run: ./gradlew --no-daemon :core:test :app:assembleDebug
+      - name: Unit tests, screenshot checks and debug APK
+        run: ./gradlew --no-daemon :core:test :app:verifyPaparazziDebug :app:assembleDebug
 
       - uses: actions/upload-artifact@v4
         with:
