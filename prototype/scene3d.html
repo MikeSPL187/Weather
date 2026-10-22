@@ -49,6 +49,7 @@ body {
   box-shadow: 0 0 0 10px #161C3A, 0 40px 80px rgba(0, 0, 0, 0.55);
   touch-action: none;
   cursor: grab;
+  container-type: inline-size;
 }
 .phone:active { cursor: grabbing; }
 .phone canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
@@ -91,7 +92,6 @@ body {
 .hud .now svg { flex-shrink: 0; color: #9FEFFF; }
 .hud .now b { display: block; font-size: 15px; }
 .hud .now span { font-size: 12px; color: rgba(255, 255, 255, 0.85); }
-.phone { container-type: inline-size; }
 .fallback { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 32px; text-align: center; color: var(--muted); }
 
 .panel {
@@ -127,6 +127,7 @@ body {
 }
 .label output { font-variant-numeric: tabular-nums; color: var(--fg); letter-spacing: 0; font-size: 14px; }
 .seg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.seg.cities { grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); }
 .seg button, .btn {
   min-height: 44px;
   border-radius: 12px;
@@ -137,12 +138,15 @@ body {
   cursor: pointer;
 }
 .seg button[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.btn[aria-pressed="true"] { background: var(--ice); border-color: var(--ice); color: var(--bg); }
 .btn.primary { background: var(--sun); color: var(--on-sun); border-color: var(--sun); }
 .btn.primary[aria-pressed="true"] { background: var(--ice); border-color: var(--ice); color: var(--bg); }
 button:focus-visible, input:focus-visible { outline: 3px solid var(--sun); outline-offset: 2px; }
 input[type="range"] { width: 100%; accent-color: var(--sun); min-height: 32px; }
 .row { display: flex; gap: 8px; flex-wrap: wrap; }
 .row .btn { flex: 1 1 140px; padding: 0 12px; }
+.sunline { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; line-height: 1.5; }
+.sunline b { color: var(--fg); font-weight: 700; }
 .toggle { display: flex; align-items: center; gap: 10px; min-height: 44px; cursor: pointer; font-weight: 600; }
 .toggle input { width: 20px; height: 20px; accent-color: var(--sun); }
 .stats {
@@ -158,12 +162,12 @@ input[type="range"] { width: 100%; accent-color: var(--sun); min-height: 32px; }
 
 <div class="wrap">
   <div class="phone" id="phone" title="Перетащите, чтобы повернуть остров">
-    <div class="hud" aria-live="polite">
-      <div class="city">Москва</div>
-      <div class="time" id="hudTime">Сейчас · 14:20</div>
-      <div class="temp" id="hudTemp">18°</div>
+    <div class="hud">
+      <div class="city" id="hudCity">Москва</div>
+      <div class="time" id="hudTime">Сейчас</div>
+      <div class="temp" id="hudTemp">9°</div>
       <div class="cond" id="hudCond">Ясно</div>
-      <div class="feels" id="hudFeels">Ощущается как 16°</div>
+      <div class="feels" id="hudFeels">Ощущается как 7°</div>
       <div class="now">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg>
         <div><b id="hudNow">Без осадков ближайшие 2 часа</b><span id="hudNowSub">Уверенность прогноза 94 %</span></div>
@@ -174,7 +178,12 @@ input[type="range"] { width: 100%; accent-color: var(--sun); min-height: 32px; }
   <section class="panel" aria-label="Управление сценой">
     <div>
       <h1>Живая диорама</h1>
-      <p>Прототип главной сцены Aura: остров-город, небо, свет и осадки считаются в реальном времени. Переключайте погоду и время суток, следите за FPS.</p>
+      <p>Прототип главной сцены Aura. Остров меняется под город, а солнце стоит там, где оно сейчас в небе этого города. Погоду и время можно переключать вручную.</p>
+    </div>
+
+    <div class="group">
+      <div class="label" id="cityLabel">Город</div>
+      <div class="seg cities" role="group" aria-labelledby="cityLabel" id="citySeg"></div>
     </div>
 
     <div class="group">
@@ -183,11 +192,12 @@ input[type="range"] { width: 100%; accent-color: var(--sun); min-height: 32px; }
     </div>
 
     <div class="group">
-      <label class="label" for="time">Время суток <output id="timeOut" for="time">14:20</output></label>
-      <input type="range" id="time" min="0" max="1439" step="1" value="860">
+      <label class="label" for="time">Время суток <output id="timeOut" for="time">—</output></label>
+      <input type="range" id="time" min="0" max="1439" step="1" value="720">
+      <div class="sunline" id="sunLine">—</div>
       <div class="row">
+        <button class="btn" id="realBtn" aria-pressed="true">Реальное время</button>
         <button class="btn primary" id="play" aria-pressed="false">Прокрутить сутки</button>
-        <button class="btn" id="nowBtn">Сейчас</button>
       </div>
     </div>
 
@@ -197,13 +207,13 @@ input[type="range"] { width: 100%; accent-color: var(--sun); min-height: 32px; }
       <label class="toggle"><input type="checkbox" id="parallax" checked> Параллакс за курсором</label>
     </div>
 
-    <div class="stats" aria-live="off">
+    <div class="stats">
       <div class="stat"><b id="fps">—</b><span>кадров/с</span></div>
       <div class="stat"><b id="parts">—</b><span>частиц</span></div>
       <div class="stat"><b id="dpr">—</b><span>масштаб</span></div>
     </div>
 
-    <div class="note">В приложении сцену будут рендерить Filament и AGSL-шейдеры. Уровни качества здесь те же, что в настройках Aura: «Высокое» для флагманов, «Эконом» для бюджетных смартфонов. Если в системе включено «Уменьшить движение», сцена замирает.</div>
+    <div class="note">Отражения в лужах, воде и стекле настоящие: сцена несколько раз в секунду рендерится в кубическую карту. После дождя лужи высыхают постепенно, в мороз вода замерзает. В приложении сцену будут рендерить Filament и AGSL-шейдеры. Уровни качества те же, что в настройках Aura. Если в системе включено «Уменьшить движение», анимация останавливается.</div>
   </section>
 </div>
 
@@ -212,98 +222,148 @@ input[type="range"] { width: 100%; accent-color: var(--sun); min-height: 32px; }
 (function () {
   const phone = document.getElementById('phone');
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const RAD = Math.PI / 180;
 
+  const CITIES = {
+    msk: { name: 'Москва', short: 'Москва', lat: 55.7558, lon: 37.6173, tz: 3, dT: 0 },
+    spb: { name: 'Санкт-Петербург', short: 'Петербург', lat: 59.9386, lon: 30.3141, tz: 3, dT: -2 },
+    kzn: { name: 'Казань', short: 'Казань', lat: 55.7963, lon: 49.1088, tz: 3, dT: -1 },
+    ala: { name: 'Алматы', short: 'Алматы', lat: 43.2389, lon: 76.8897, tz: 5, dT: 4 }
+  };
   const WEATHER = {
-    clear:  { label: 'Ясно',     cloud: 0.12, dark: 0.0,  rain: 0, snow: 0, fog: 0, storm: 0, temp: 18,
+    clear:  { label: 'Ясно',    cond: 'Ясно',            cloud: 0.12, dark: 0.0,  rain: 0,   snow: 0, fog: 0,    storm: 0, temp: 9,
               now: 'Без осадков ближайшие 2 часа', sub: 'Уверенность прогноза 94 %' },
-    cloudy: { label: 'Облачно',  cloud: 0.85, dark: 0.3,  rain: 0, snow: 0, fog: 0, storm: 0, temp: 14,
+    cloudy: { label: 'Облачно', cond: 'Облачно',         cloud: 0.85, dark: 0.3,  rain: 0,   snow: 0, fog: 0,    storm: 0, temp: 7,
               now: 'Без осадков до вечера', sub: 'Облачность 80 %, просветы после 16:00' },
-    rain:   { label: 'Дождь',    cloud: 1.0,  dark: 0.6,  rain: 1, snow: 0, fog: 0.15, storm: 0, temp: 11,
+    rain:   { label: 'Дождь',   cond: 'Небольшой дождь', cloud: 1.0,  dark: 0.6,  rain: 1,   snow: 0, fog: 0.15, storm: 0, temp: 6,
               now: 'Дождь закончится через 24 мин', sub: 'Уверенность прогноза 87 %' },
-    storm:  { label: 'Гроза',    cloud: 1.0,  dark: 0.85, rain: 1.4, snow: 0, fog: 0.1, storm: 1, temp: 16,
+    storm:  { label: 'Гроза',   cond: 'Гроза',           cloud: 1.0,  dark: 0.85, rain: 1.4, snow: 0, fog: 0.1,  storm: 1, temp: 11,
               now: 'Гроза в 3 км, порывы до 17 м/с', sub: 'Предупреждение МЧС до 20:00' },
-    snow:   { label: 'Снег',     cloud: 0.95, dark: 0.35, rain: 0, snow: 1, fog: 0.2, storm: 0, temp: -3,
+    snow:   { label: 'Снег',    cond: 'Снегопад',        cloud: 0.95, dark: 0.35, rain: 0,   snow: 1, fog: 0.2,  storm: 0, temp: -3,
               now: 'Снег усилится через 40 мин', sub: 'Уверенность прогноза 81 %' },
-    fog:    { label: 'Туман',    cloud: 0.4,  dark: 0.25, rain: 0, snow: 0, fog: 1, storm: 0, temp: 7,
+    fog:    { label: 'Туман',   cond: 'Туман',           cloud: 0.4,  dark: 0.25, rain: 0,   snow: 0, fog: 1,    storm: 0, temp: 4,
               now: 'Видимость 300 м', sub: 'Туман рассеется к 11:00' }
   };
   const QUALITY = {
-    high: { label: 'Высокое', dpr: Math.min(window.devicePixelRatio || 1, 2), shadows: true,  rain: 4000, snow: 2600, cap: 0 },
-    mid:  { label: 'Баланс',  dpr: 1,    shadows: false, rain: 2000, snow: 1400, cap: 0 },
-    eco:  { label: 'Эконом',  dpr: 0.75, shadows: false, rain: 700,  snow: 500,  cap: 30 }
+    high: { label: 'Высокое', dpr: Math.min(window.devicePixelRatio || 1, 2), shadows: true,  rain: 4000, snow: 2600, clouds: 14, puffs: 14, cubeEvery: 2,  splash: 6, cap: 0 },
+    mid:  { label: 'Баланс',  dpr: 1,    shadows: false, rain: 2000, snow: 1400, clouds: 10, puffs: 10, cubeEvery: 6,  splash: 3, cap: 0 },
+    eco:  { label: 'Эконом',  dpr: 0.75, shadows: false, rain: 700,  snow: 500,  clouds: 7,  puffs: 7,  cubeEvery: 30, splash: 1, cap: 30 }
   };
-  const SUNRISE = 461, SUNSET = 1032; // Moscow, 22 October: 07:41 and 17:12
 
-  const state = { weather: 'clear', minutes: 860, quality: 'high', parallax: true, playing: false };
+  const state = { city: 'msk', weather: 'clear', minutes: 720, quality: 'high', parallax: true, playing: false, realtime: true };
+
+  // ---------- Sun position (NOAA approximation) ----------
+  function localNow(city) {
+    const d = new Date(Date.now() + city.tz * 3600e3);
+    const doy = Math.round((Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) - Date.UTC(d.getUTCFullYear(), 0, 1)) / 864e5) + 1;
+    return { doy: doy, minutes: d.getUTCHours() * 60 + d.getUTCMinutes() + d.getUTCSeconds() / 60 };
+  }
+  function solar(city, doy, minutes) {
+    const g = 2 * Math.PI / 365 * (doy - 1 + (minutes / 60 - 12) / 24);
+    const eqt = 229.18 * (0.000075 + 0.001868 * Math.cos(g) - 0.032077 * Math.sin(g) - 0.014615 * Math.cos(2 * g) - 0.040849 * Math.sin(2 * g));
+    const decl = 0.006918 - 0.399912 * Math.cos(g) + 0.070257 * Math.sin(g) - 0.006758 * Math.cos(2 * g) + 0.000907 * Math.sin(2 * g) - 0.002697 * Math.cos(3 * g) + 0.00148 * Math.sin(3 * g);
+    const ha = ((minutes + eqt + 4 * city.lon - 60 * city.tz) / 4 - 180) * RAD;
+    const lat = city.lat * RAD;
+    const cosZ = Math.sin(lat) * Math.sin(decl) + Math.cos(lat) * Math.cos(decl) * Math.cos(ha);
+    const elev = 90 - Math.acos(Math.max(-1, Math.min(1, cosZ))) / RAD;
+    const az = (180 + Math.atan2(Math.sin(ha), Math.cos(ha) * Math.sin(lat) - Math.tan(decl) * Math.cos(lat)) / RAD + 360) % 360;
+    return { elev: elev, az: az };
+  }
+  const sunCache = {};
+  function sunTimes(cityKey, doy) {
+    const key = cityKey + doy;
+    if (sunCache[key]) return sunCache[key];
+    const city = CITIES[cityKey];
+    let rise = null, set = null, noon = 720, best = -99, prev = solar(city, doy, 0).elev;
+    for (let m = 1; m < 1440; m++) {
+      const e = solar(city, doy, m).elev;
+      if (prev < -0.833 && e >= -0.833 && rise === null) rise = m;
+      if (prev >= -0.833 && e < -0.833) set = m;
+      if (e > best) { best = e; noon = m; }
+      prev = e;
+    }
+    return (sunCache[key] = { rise: rise, set: set, noon: noon, max: best });
+  }
 
   // ---------- UI ----------
-  const weatherSeg = document.getElementById('weatherSeg');
-  Object.keys(WEATHER).forEach(function (k) {
-    const b = document.createElement('button');
-    b.type = 'button'; b.textContent = WEATHER[k].label; b.dataset.k = k;
-    b.addEventListener('click', function () { state.weather = k; syncUI(); });
-    weatherSeg.appendChild(b);
-  });
-  const qualitySeg = document.getElementById('qualitySeg');
-  Object.keys(QUALITY).forEach(function (k) {
-    const b = document.createElement('button');
-    b.type = 'button'; b.textContent = QUALITY[k].label; b.dataset.k = k;
-    b.addEventListener('click', function () { state.quality = k; applyQuality(); syncUI(); });
-    qualitySeg.appendChild(b);
-  });
-  const timeInput = document.getElementById('time');
-  timeInput.addEventListener('input', function () { state.minutes = +timeInput.value; state.playing = false; syncUI(); });
-  document.getElementById('play').addEventListener('click', function () { state.playing = !state.playing; syncUI(); });
-  document.getElementById('nowBtn').addEventListener('click', function () { state.minutes = 860; state.playing = false; syncUI(); });
-  document.getElementById('parallax').addEventListener('change', function (e) { state.parallax = e.target.checked; });
-
   function fmtTime(m) {
+    if (m === null) return '—';
     m = ((Math.round(m) % 1440) + 1440) % 1440;
-    const h = Math.floor(m / 60), mm = m % 60;
-    return String(h).padStart(2, '0') + ':' + String(mm).padStart(2, '0');
+    return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
   }
   function fmtTemp(t) { const r = Math.round(t); return (r < 0 ? '−' + Math.abs(r) : String(r)) + '°'; }
+  function segment(el, items, onPick) {
+    Object.keys(items).forEach(function (k) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.textContent = items[k].short || items[k].label; b.dataset.k = k;
+      b.addEventListener('click', function () { onPick(k); });
+      el.appendChild(b);
+    });
+  }
+  const citySeg = document.getElementById('citySeg');
+  const weatherSeg = document.getElementById('weatherSeg');
+  const qualitySeg = document.getElementById('qualitySeg');
+  const timeInput = document.getElementById('time');
+  const realBtn = document.getElementById('realBtn');
+  const playBtn = document.getElementById('play');
+  segment(citySeg, CITIES, function (k) { state.city = k; if (renderer) buildCity(k); syncUI(); });
+  segment(weatherSeg, WEATHER, function (k) { state.weather = k; syncUI(); });
+  segment(qualitySeg, QUALITY, function (k) { state.quality = k; if (renderer) applyQuality(); syncUI(); });
+  timeInput.addEventListener('input', function () { state.minutes = +timeInput.value; state.playing = false; state.realtime = false; syncUI(); });
+  realBtn.addEventListener('click', function () { state.realtime = !state.realtime; state.playing = false; tickClock(); syncUI(); });
+  playBtn.addEventListener('click', function () { state.playing = !state.playing; if (state.playing) state.realtime = false; syncUI(); });
+  document.getElementById('parallax').addEventListener('change', function (e) { state.parallax = e.target.checked; });
 
+  function tickClock() {
+    if (!state.realtime) return;
+    state.minutes = localNow(CITIES[state.city]).minutes;
+  }
   function syncUI() {
-    weatherSeg.querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.k === state.weather)); });
-    qualitySeg.querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.k === state.quality)); });
-    const play = document.getElementById('play');
-    play.setAttribute('aria-pressed', String(state.playing));
-    play.textContent = state.playing ? 'Пауза' : 'Прокрутить сутки';
-    timeInput.value = String(Math.round(state.minutes) % 1440);
+    [[citySeg, state.city], [weatherSeg, state.weather], [qualitySeg, state.quality]].forEach(function (p) {
+      p[0].querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.k === p[1])); });
+    });
+    realBtn.setAttribute('aria-pressed', String(state.realtime));
+    playBtn.setAttribute('aria-pressed', String(state.playing));
+    playBtn.textContent = state.playing ? 'Пауза' : 'Прокрутить сутки';
+    timeInput.value = String(Math.floor(state.minutes) % 1440);
     updateHud();
   }
-
   function updateHud() {
-    const w = WEATHER[state.weather];
-    const m = state.minutes % 1440;
+    const city = CITIES[state.city], w = WEATHER[state.weather];
+    const doy = localNow(city).doy, m = state.minutes % 1440;
+    const st = sunTimes(state.city, doy), sol = solar(city, doy, m);
     const t = fmtTime(m);
     document.getElementById('timeOut').textContent = t;
-    document.getElementById('hudTime').textContent = 'Сейчас · ' + t;
-    const diurnal = 4 * Math.sin(Math.PI * (m - 540) / 720);
-    const temp = w.temp + diurnal - 4;
+    document.getElementById('hudCity').textContent = city.name;
+    document.getElementById('hudTime').textContent = (state.realtime ? 'Сейчас · ' : 'На шкале · ') + t;
+    const swing = w.cloud > 0.8 ? 1.5 : 3;
+    const temp = w.temp + city.dT + swing * Math.cos(2 * Math.PI * (m - st.noon - 150) / 1440);
     document.getElementById('hudTemp').textContent = fmtTemp(temp);
-    const night = m < SUNRISE || m > SUNSET;
-    document.getElementById('hudCond').textContent = (state.weather === 'clear' && night) ? 'Ясно, звёздное небо' : w.label === 'Снег' ? 'Снегопад' : w.label === 'Дождь' ? 'Небольшой дождь' : w.label;
+    const night = sol.elev < -2;
+    document.getElementById('hudCond').textContent = state.weather === 'clear' && night ? 'Ясно, звёздное небо' : w.cond;
     const feels = temp - (w.storm ? 4 : w.rain ? 3 : w.snow ? 5 : 2);
     document.getElementById('hudFeels').textContent = 'Ощущается как ' + fmtTemp(feels);
     document.getElementById('hudNow').textContent = w.now;
     document.getElementById('hudNowSub').textContent = w.sub;
+    const e = Math.round(sol.elev);
+    document.getElementById('sunLine').innerHTML = 'Восход <b>' + fmtTime(st.rise) + '</b> · закат <b>' + fmtTime(st.set) + '</b> · солнце ' +
+      (e >= 0 ? '<b>' + e + '°</b> над горизонтом' : '<b>' + Math.abs(e) + '°</b> под горизонтом');
   }
 
   // ---------- Renderer ----------
-  let renderer;
+  let renderer = null;
   try {
-    renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+    if (typeof THREE !== 'undefined') renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
   } catch (e) {
     renderer = null;
   }
-  if (!renderer || typeof THREE === 'undefined') {
+  if (!renderer) {
     const f = document.createElement('div');
     f.className = 'fallback';
     f.textContent = 'WebGL недоступен в этом браузере, поэтому 3D-сцена не запустилась.';
     phone.appendChild(f);
-    syncUI();
+    tickClock(); syncUI();
+    setInterval(function () { tickClock(); if (state.realtime) updateHud(); }, 1000);
     return;
   }
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -315,12 +375,40 @@ input[type="range"] { width: 100%; accent-color: var(--sun); min-height: 32px; }
   const camera = new THREE.PerspectiveCamera(50, 412 / 915, 0.1, 200);
   const LOOK = new THREE.Vector3(0, 1.4, 0);
   const CAM_DIST = 17.5;
+  const GROUND = 0.225;
 
-  // Sky dome
+  function rng(seed) {
+    return function () {
+      seed = (seed + 0x6D2B79F5) | 0;
+      let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  // Reflection probe: puddles, water and glass reflect a live cube map of the scene
+  const cubeRT = new THREE.WebGLCubeRenderTarget(128, { generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter });
+  const cubeCam = new THREE.CubeCamera(0.1, 120, cubeRT);
+  scene.add(cubeCam);
+
+  // Sky dome with sun halo and horizon haze
   const skyMat = new THREE.ShaderMaterial({
-    uniforms: { top: { value: new THREE.Color(0x1D4ED8) }, bottom: { value: new THREE.Color(0x8EC2FF) }, flash: { value: 0 } },
+    uniforms: {
+      top: { value: new THREE.Color(0x1D4ED8) }, bottom: { value: new THREE.Color(0x8EC2FF) }, haze: { value: new THREE.Color(0xCFE2FF) },
+      sunDir: { value: new THREE.Vector3(0, 0.3, -1) }, sunCol: { value: new THREE.Color(0xFFD9A0) }, sunAmt: { value: 1 }, flash: { value: 0 }
+    },
     vertexShader: 'varying vec3 vW; void main(){ vW = (modelMatrix * vec4(position,1.0)).xyz; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
-    fragmentShader: 'uniform vec3 top; uniform vec3 bottom; uniform float flash; varying vec3 vW; void main(){ float h = normalize(vW).y; vec3 c = mix(bottom, top, smoothstep(-0.2, 0.65, h)); gl_FragColor = vec4(c + vec3(flash), 1.0); }',
+    fragmentShader: [
+      'uniform vec3 top; uniform vec3 bottom; uniform vec3 haze; uniform vec3 sunDir; uniform vec3 sunCol; uniform float sunAmt; uniform float flash; varying vec3 vW;',
+      'void main(){',
+      '  vec3 d = normalize(vW); float h = d.y;',
+      '  vec3 c = mix(bottom, top, smoothstep(-0.15, 0.7, h));',
+      '  c = mix(c, haze, exp(-abs(h - 0.02) * 9.0) * 0.55);',
+      '  float s = max(dot(d, normalize(sunDir)), 0.0);',
+      '  c += sunCol * (pow(s, 6.0) * 0.3 + pow(s, 60.0) * 0.55) * sunAmt;',
+      '  gl_FragColor = vec4(c + vec3(flash), 1.0);',
+      '}'
+    ].join('\n'),
     side: THREE.BackSide, depthWrite: false, fog: false
   });
   scene.add(new THREE.Mesh(new THREE.SphereGeometry(80, 32, 16), skyMat));
@@ -336,7 +424,7 @@ input[type="range"] { width: 100%; accent-color: var(--sun); min-height: 32px; }
   const moonLight = new THREE.DirectionalLight(0x9FB4FF, 0.2);
   scene.add(moonLight);
 
-  // Helpers
+  // Textures
   function radialTexture(inner, outer) {
     const c = document.createElement('canvas'); c.width = c.height = 128;
     const g = c.getContext('2d');
@@ -345,70 +433,259 @@ input[type="range"] { width: 100%; accent-color: var(--sun); min-height: 32px; }
     g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
     return new THREE.CanvasTexture(c);
   }
-  const flat = function (color) { return new THREE.MeshStandardMaterial({ color: color, flatShading: true, roughness: 0.9, metalness: 0 }); };
+  function puffTexture(seed) {
+    const r = rng(seed), c = document.createElement('canvas'); c.width = c.height = 128;
+    const g = c.getContext('2d');
+    for (let i = 0; i < 10; i++) {
+      const x = 64 + (r() - 0.5) * 44, y = 66 + (r() - 0.5) * 30, rad = 22 + r() * 22;
+      const gr = g.createRadialGradient(x, y, 0, x, y, rad);
+      gr.addColorStop(0, 'rgba(255,255,255,0.55)'); gr.addColorStop(0.6, 'rgba(255,255,255,0.25)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+      g.fillStyle = gr; g.beginPath(); g.arc(x, y, rad, 0, Math.PI * 2); g.fill();
+    }
+    return new THREE.CanvasTexture(c);
+  }
+  const puffTex = [puffTexture(3), puffTexture(11), puffTexture(29)];
+  const softTex = radialTexture('rgba(255,255,255,1)', 'rgba(255,255,255,0)');
 
-  // Floating island
+  // ---------- Island base ----------
   const island = new THREE.Group();
   scene.add(island);
-  const grassMat = flat(0x5FAE6B);
-  const grassBase = new THREE.Color(0x5FAE6B), grassWet = new THREE.Color(0x3F7F4E), snowCol = new THREE.Color(0xF2F6FF);
-  const top = new THREE.Mesh(new THREE.CylinderGeometry(2.8, 2.6, 0.45, 44), grassMat);
-  top.receiveShadow = true; island.add(top);
+  const flat = function (color, extra) { return new THREE.MeshStandardMaterial(Object.assign({ color: color, flatShading: true, roughness: 0.9, metalness: 0 }, extra || {})); };
+  const grassMat = flat(0x4E9F5C);
+  const grassBase = new THREE.Color(0x4E9F5C), grassWet = new THREE.Color(0x356F43), white = new THREE.Color(0xF2F6FF);
+  const topMesh = new THREE.Mesh(new THREE.CylinderGeometry(2.8, 2.6, 0.45, 44), grassMat);
+  topMesh.receiveShadow = true; island.add(topMesh);
   const dirt = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 2.1, 0.6, 44), flat(0xA07E5E));
   dirt.position.y = -0.52; island.add(dirt);
   const rock = new THREE.Mesh(new THREE.ConeGeometry(2.1, 3.4, 9), flat(0x8E7765));
   rock.rotation.x = Math.PI; rock.position.y = -2.5; island.add(rock);
-  const pond = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.06, 28), new THREE.MeshStandardMaterial({ color: 0x4E86E8, roughness: 0.15, metalness: 0.1 }));
-  pond.position.set(-1.3, 0.24, 0.9); island.add(pond);
-
-  const roofMats = [flat(0xE8E2D6), flat(0xCFD8E6), flat(0xF2C6A0), flat(0xDDE3EE)];
-  const snowCaps = [];
-  function building(x, z, w, d, h, mat) {
-    const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
-    b.position.set(x, 0.22 + h / 2, z); b.castShadow = true; b.receiveShadow = true; island.add(b);
-    const cap = new THREE.Mesh(new THREE.BoxGeometry(w * 1.02, 0.06, d * 1.02), new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 1 }));
-    cap.position.set(x, 0.22 + h + 0.03, z); cap.visible = false; island.add(cap); snowCaps.push(cap);
-    return b;
-  }
-  building(0.6, -0.6, 0.7, 0.7, 1.1, roofMats[0]);
-  building(1.5, 0.2, 0.6, 0.8, 0.8, roofMats[1]);
-  building(-0.4, -1.4, 0.8, 0.6, 0.7, roofMats[2]);
-  building(1.1, 1.3, 0.7, 0.6, 0.6, roofMats[3]);
-  building(-1.6, -0.4, 0.6, 0.6, 0.9, roofMats[1]);
-  // Tower with a golden spire
-  const towerMat = flat(0xE9DCC4);
-  building(0, 0.2, 0.9, 0.9, 1.6, towerMat);
-  const t2 = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.9, 0.55), towerMat);
-  t2.position.set(0, 0.22 + 1.6 + 0.45, 0.2); t2.castShadow = true; island.add(t2);
-  const t3 = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.5, 0.3), towerMat);
-  t3.position.set(0, 0.22 + 2.5 + 0.25, 0.2); t3.castShadow = true; island.add(t3);
-  const spire = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.9, 8), new THREE.MeshStandardMaterial({ color: 0xFFC94A, metalness: 0.6, roughness: 0.3, emissive: 0x3A2500 }));
-  spire.position.set(0, 0.22 + 3.0 + 0.45, 0.2); island.add(spire);
-  const windows = new THREE.MeshBasicMaterial({ color: 0xFFD68A, transparent: true, opacity: 0 });
-  [[0.6, -0.6, 1.1, 0.7], [0, 0.2, 1.6, 0.9], [1.5, 0.2, 0.8, 0.8], [-1.6, -0.4, 0.9, 0.6]].forEach(function (b) {
-    for (let i = 0; i < 3; i++) {
-      const wdw = new THREE.Mesh(new THREE.PlaneGeometry(0.12, 0.12), windows);
-      wdw.position.set(b[0] - 0.18 + i * 0.18, 0.22 + b[2] * 0.6, b[1] + b[3] / 2 + 0.005);
-      island.add(wdw);
-    }
-  });
-  // Trees
-  const leaf = flat(0x3E8E5A), trunk = flat(0x6B4A33);
-  [[-2.0, 0.9], [-1.9, 1.6], [2.0, -1.0], [-0.9, 1.9], [0.3, 2.1], [2.1, 1.0], [-2.2, -1.2], [0.9, -2.0]].forEach(function (p, i) {
-    const tr = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.07, 0.3, 6), trunk);
-    tr.position.set(p[0], 0.37, p[1]); island.add(tr);
-    const h = 0.6 + (i % 3) * 0.15;
-    const c = new THREE.Mesh(new THREE.ConeGeometry(0.28, h, 7), leaf);
-    c.position.set(p[0], 0.5 + h / 2, p[1]); c.castShadow = true; island.add(c);
-  });
-  // Small floating rocks
   const rocks = [];
   [[3.4, -1.2, 0.8], [-3.3, -1.8, -0.6], [2.6, -2.8, 1.8]].forEach(function (p, i) {
-    const r = new THREE.Mesh(new THREE.DodecahedronGeometry(0.25 + i * 0.08, 0), flat(0x6B5A4E));
+    const r = new THREE.Mesh(new THREE.DodecahedronGeometry(0.25 + i * 0.08, 0), flat(0x8E7765));
     r.position.set(p[0], p[1], p[2]); r.userData.base = p[1]; r.userData.phase = i * 2; scene.add(r); rocks.push(r);
   });
 
-  // Sun and moon
+  // Shared city materials
+  const waterMat = new THREE.MeshStandardMaterial({ color: 0x5B8FD6, metalness: 0.85, roughness: 0.06, envMap: cubeRT.texture });
+  const waterBase = new THREE.Color(0x5B8FD6), iceCol = new THREE.Color(0xDDE8F5);
+  const wetRimMat = new THREE.MeshBasicMaterial({ color: 0x1E3524, transparent: true, opacity: 0, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1 });
+  const puddleMat = new THREE.MeshStandardMaterial({ color: 0xDCE6F5, metalness: 1, roughness: 0.02, envMap: cubeRT.texture, envMapIntensity: 1.5, transparent: true, opacity: 0, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 });
+  const glassMat = new THREE.MeshStandardMaterial({ color: 0x9DB9DA, metalness: 0.75, roughness: 0.12, envMap: cubeRT.texture });
+  const windowMat = new THREE.MeshBasicMaterial({ color: 0x4A6A90 });
+  const winDay = new THREE.Color(0x4A6A90), winNight = new THREE.Color(0xFFD68A);
+  const capMat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 1 });
+  const beaconMat = new THREE.MeshBasicMaterial({ color: 0xFF3B30 });
+
+  // ---------- City builders ----------
+  let city = null; // { group, snowables, snowCaps, waters, puddles, probe }
+  function buildCity(key) {
+    if (city) {
+      island.remove(city.group);
+      city.group.traverse(function (o) {
+        if (o.geometry) o.geometry.dispose();
+        if (o.material && city.owned.indexOf(o.material) >= 0) o.material.dispose();
+      });
+    }
+    const g = new THREE.Group();
+    const C = { group: g, snowables: [], snowCaps: [], waters: [], puddles: [], owned: [], probe: new THREE.Vector3(0.8, 0.35, 1.2) };
+    const r = rng(key.charCodeAt(0) * 31 + key.charCodeAt(1));
+    const winList = [];
+    function m(color, extra, snowK) {
+      const mt = flat(color, extra); C.owned.push(mt);
+      if (snowK) C.snowables.push({ mat: mt, base: new THREE.Color(color), k: snowK });
+      return mt;
+    }
+    function add(geo, mt, x, y, z) {
+      const me = new THREE.Mesh(geo, mt); me.position.set(x, y, z); me.castShadow = true; me.receiveShadow = true; g.add(me); return me;
+    }
+    function windows(x, z, w, d, h) {
+      for (let y = GROUND + 0.2; y < GROUND + h - 0.12; y += 0.26) {
+        const cz = Math.max(1, Math.floor(w / 0.2)), cx = Math.max(1, Math.floor(d / 0.2));
+        for (let c = 0; c < cz; c++) {
+          const px = x - w / 2 + (c + 0.5) * w / cz;
+          if (r() < 0.8) winList.push([px, y, z + d / 2 + 0.004, 0]);
+          if (r() < 0.8) winList.push([px, y, z - d / 2 - 0.004, Math.PI]);
+        }
+        for (let c = 0; c < cx; c++) {
+          const pz = z - d / 2 + (c + 0.5) * d / cx;
+          if (r() < 0.8) winList.push([x + w / 2 + 0.004, y, pz, Math.PI / 2]);
+          if (r() < 0.8) winList.push([x - w / 2 - 0.004, y, pz, -Math.PI / 2]);
+        }
+      }
+    }
+    function block(x, z, w, d, h, mt, roofColor) {
+      add(new THREE.BoxGeometry(w, h, d), mt, x, GROUND + h / 2, z);
+      windows(x, z, w, d, h);
+      if (roofColor) {
+        const big = Math.max(w, d);
+        const roof = add(new THREE.ConeGeometry(big * 0.72, 0.3, 4), m(roofColor, null, 0.9), x, GROUND + h + 0.15, z);
+        roof.rotation.y = Math.PI / 4; roof.scale.set(w / big, 1, d / big);
+      } else {
+        const cap = new THREE.Mesh(new THREE.BoxGeometry(w * 1.02, 0.05, d * 1.02), capMat);
+        cap.position.set(x, GROUND + h + 0.025, z); cap.visible = false; g.add(cap); C.snowCaps.push(cap);
+      }
+    }
+    const trunk = m(0x6B4A33);
+    const spruce = m(0x2F7A4F, null, 0.55), round = m(0x4E9A55, null, 0.5), apple = m(0x5DA04F, null, 0.5), fruit = m(0xD9342B);
+    function tree(x, z, kind) {
+      add(new THREE.CylinderGeometry(0.04, 0.06, 0.3, 6), trunk, x, GROUND + 0.15, z);
+      if (kind === 'spruce') {
+        const h = 0.55 + r() * 0.35;
+        add(new THREE.ConeGeometry(0.24, h, 7), spruce, x, GROUND + 0.25 + h / 2, z);
+      } else {
+        const s = 0.24 + r() * 0.1;
+        add(new THREE.IcosahedronGeometry(s, 0), kind === 'apple' ? apple : round, x, GROUND + 0.32 + s, z);
+        if (kind === 'apple') for (let i = 0; i < 4; i++) {
+          const a = r() * Math.PI * 2;
+          add(new THREE.SphereGeometry(0.035, 6, 4), fruit, x + Math.cos(a) * s * 0.85, GROUND + 0.3 + s + (r() - 0.3) * s, z + Math.sin(a) * s * 0.85);
+        }
+      }
+    }
+    function water(geo, x, y, z) { const me = add(geo, waterMat, x, y, z); me.castShadow = false; C.waters.push(me); return me; }
+    function pond(x, z, rad, sx) { const me = water(new THREE.CylinderGeometry(rad, rad, 0.04, 28), x, GROUND - 0.005, z); me.scale.x = sx || 1; }
+    function puddle(x, z, rad, sx) {
+      const geo = new THREE.CircleGeometry(rad, 20);
+      const rim = new THREE.Mesh(geo, wetRimMat);
+      rim.rotation.x = -Math.PI / 2; rim.position.set(x, GROUND + 0.003, z); rim.userData.sx = sx || 1.4; rim.userData.rim = 1.3;
+      const me = new THREE.Mesh(geo, puddleMat);
+      me.rotation.x = -Math.PI / 2; me.position.set(x, GROUND + 0.006, z); me.userData.sx = sx || 1.4; me.userData.rim = 1;
+      g.add(rim); g.add(me); C.puddles.push(rim, me);
+    }
+    function spire(x, y, z, h, rad) { add(new THREE.ConeGeometry(rad || 0.08, h, 8), gold, x, y + h / 2, z); }
+    const gold = m(0xFFC94A, { metalness: 0.7, roughness: 0.3, emissive: 0x3A2500, flatShading: false });
+
+    if (key === 'msk') {
+      // Stalinist high-rise with a golden spire
+      const stone = m(0xE9DCC4);
+      add(new THREE.BoxGeometry(1.6, 0.7, 0.8), stone, -0.1, GROUND + 0.35, -0.3); windows(-0.1, -0.3, 1.6, 0.8, 0.7);
+      add(new THREE.BoxGeometry(0.8, 1.6, 0.8), stone, -0.1, GROUND + 0.8, -0.3); windows(-0.1, -0.3, 0.8, 0.8, 1.6);
+      add(new THREE.BoxGeometry(0.55, 0.8, 0.55), stone, -0.1, GROUND + 2.0, -0.3);
+      add(new THREE.BoxGeometry(0.32, 0.5, 0.32), stone, -0.1, GROUND + 2.65, -0.3);
+      spire(-0.1, GROUND + 2.9, -0.3, 0.9, 0.11);
+      const star = add(new THREE.OctahedronGeometry(0.07), m(0xD9342B, { emissive: 0x550000 }), -0.1, GROUND + 3.85, -0.3);
+      star.castShadow = false;
+      // Kremlin wall with towers
+      const brick = m(0xB0412E), roofGreen = m(0x2E6B4F, null, 0.9);
+      add(new THREE.BoxGeometry(3.6, 0.32, 0.14), brick, 0, GROUND + 0.16, -1.95);
+      [[-1.5, 0.7], [0.0, 1.05], [1.5, 0.7]].forEach(function (t) {
+        add(new THREE.BoxGeometry(0.32, t[1], 0.32), brick, t[0], GROUND + t[1] / 2, -1.95);
+        const cone = add(new THREE.ConeGeometry(0.24, 0.38, 4), roofGreen, t[0], GROUND + t[1] + 0.19, -1.95); cone.rotation.y = Math.PI / 4;
+      });
+      add(new THREE.OctahedronGeometry(0.06), m(0xD9342B, { emissive: 0x550000 }), 0, GROUND + 1.55, -1.95);
+      block(1.6, 0.5, 0.6, 0.8, 0.9, m(0xCFD8E6));
+      block(-1.7, 0.6, 0.6, 0.6, 0.7, m(0xF2C6A0));
+      block(1.05, 1.6, 0.6, 0.5, 0.6, m(0xDDE3EE));
+      block(-0.8, 1.6, 0.5, 0.5, 0.5, m(0xE8E2D6));
+      pond(-1.55, 1.55, 0.42, 1.2);
+      [[2.1, -0.8], [-2.2, -0.9], [0.2, 2.2], [-2.3, 0.0], [2.2, 1.3], [0.1, 1.2]].forEach(function (p) { tree(p[0], p[1], 'spruce'); });
+      puddle(0.55, 0.9, 0.3); puddle(-0.7, 0.75, 0.22); puddle(1.75, -0.5, 0.2); puddle(-1.2, -1.1, 0.24); puddle(1.5, 1.05, 0.18);
+      C.probe.set(0.2, 0.9, 0.95);
+    }
+
+    if (key === 'spb') {
+      // Canal with granite banks and a bridge
+      water(new THREE.BoxGeometry(5.2, 0.05, 0.55), 0, GROUND - 0.015, 0.85);
+      const granite = m(0x8C8A8F);
+      add(new THREE.BoxGeometry(5.2, 0.08, 0.06), granite, 0, GROUND + 0.02, 0.56);
+      add(new THREE.BoxGeometry(5.2, 0.08, 0.06), granite, 0, GROUND + 0.02, 1.14);
+      add(new THREE.BoxGeometry(0.32, 0.06, 0.72), granite, 0.35, GROUND + 0.12, 0.85);
+      add(new THREE.BoxGeometry(0.32, 0.12, 0.06), m(0x2B2B30), 0.35, GROUND + 0.19, 0.52);
+      add(new THREE.BoxGeometry(0.32, 0.12, 0.06), m(0x2B2B30), 0.35, GROUND + 0.19, 1.18);
+      // Peter and Paul Cathedral: nave, stepped bell tower, golden needle
+      const sand = m(0xF2D9A8);
+      add(new THREE.BoxGeometry(1.3, 0.6, 0.55), sand, -0.5, GROUND + 0.3, -1.25); windows(-0.5, -1.25, 1.3, 0.55, 0.6);
+      const roofCath = add(new THREE.BoxGeometry(1.3, 0.12, 0.45), m(0x5E8F7A, null, 0.9), -0.5, GROUND + 0.66, -1.25);
+      roofCath.castShadow = true;
+      add(new THREE.BoxGeometry(0.42, 0.7, 0.42), sand, 0.35, GROUND + 0.35, -1.25);
+      add(new THREE.BoxGeometry(0.32, 0.45, 0.32), sand, 0.35, GROUND + 0.92, -1.25);
+      add(new THREE.BoxGeometry(0.22, 0.35, 0.22), gold, 0.35, GROUND + 1.32, -1.25);
+      spire(0.35, GROUND + 1.5, -1.25, 1.7, 0.055);
+      const pastel = [[0xF2D388, 0x4F7F6A], [0xA8D8C0, 0x8E5B4A], [0xE8B4B8, 0x5E6A7A], [0xBFD3EA, 0x6B4F3A]];
+      [[-1.7, -0.1, 0.7, 0.5, 0.6], [-0.6, 0.05, 0.6, 0.5, 0.55], [0.6, -0.05, 0.6, 0.5, 0.65], [1.65, -0.45, 0.6, 0.6, 0.55]].forEach(function (b, i) {
+        block(b[0], b[1], b[2], b[3], b[4], m(pastel[i][0]), pastel[i][1]);
+      });
+      [[-1.0, 1.75, 0.6, 0.45, 0.45], [0.25, 1.9, 0.6, 0.45, 0.5], [1.4, 1.6, 0.5, 0.45, 0.45]].forEach(function (b, i) {
+        block(b[0], b[1], b[2], b[3], b[4], m(pastel[(i + 1) % 4][0]), pastel[(i + 2) % 4][1]);
+      });
+      [[-2.1, 0.5], [2.2, 0.35], [-1.9, -1.2], [1.5, -1.6], [-2.0, 1.55], [2.1, 1.4]].forEach(function (p) { tree(p[0], p[1], 'round'); });
+      puddle(-0.1, -0.55, 0.28); puddle(1.15, 0.38, 0.2); puddle(-1.25, 0.42, 0.2); puddle(-0.4, 1.45, 0.18); puddle(1.0, -0.75, 0.2);
+      C.probe.set(-0.1, 0.9, 0.85);
+    }
+
+    if (key === 'kzn') {
+      // Kul Sharif mosque: white base, turquoise dome, four minarets
+      const whiteStone = m(0xF4F1EA), turquoise = m(0x2E9FD0, { metalness: 0.35, roughness: 0.35, flatShading: false }, 0.85);
+      add(new THREE.BoxGeometry(1.1, 0.5, 1.1), whiteStone, 0, GROUND + 0.25, -0.5); windows(0, -0.5, 1.1, 1.1, 0.5);
+      add(new THREE.CylinderGeometry(0.34, 0.36, 0.28, 16), whiteStone, 0, GROUND + 0.64, -0.5);
+      add(new THREE.SphereGeometry(0.4, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), turquoise, 0, GROUND + 0.78, -0.5);
+      spire(0, GROUND + 1.17, -0.5, 0.3, 0.04);
+      [[-0.68, -1.18], [0.68, -1.18], [-0.68, 0.18], [0.68, 0.18]].forEach(function (p) {
+        add(new THREE.CylinderGeometry(0.055, 0.07, 1.9, 10), whiteStone, p[0], GROUND + 0.95, p[1]);
+        add(new THREE.CylinderGeometry(0.1, 0.1, 0.05, 12), whiteStone, p[0], GROUND + 1.35, p[1]);
+        add(new THREE.CylinderGeometry(0.09, 0.09, 0.05, 12), whiteStone, p[0], GROUND + 1.75, p[1]);
+        add(new THREE.ConeGeometry(0.07, 0.34, 10), turquoise, p[0], GROUND + 2.07, p[1]);
+      });
+      // White Kremlin wall and the red Söyembikä tower
+      add(new THREE.BoxGeometry(3.2, 0.3, 0.13), whiteStone, -0.2, GROUND + 0.15, -2.0);
+      const red = m(0xB54A3A), green = m(0x2E6B4F, null, 0.9);
+      add(new THREE.BoxGeometry(0.4, 0.5, 0.4), red, 1.55, GROUND + 0.25, -1.35);
+      add(new THREE.BoxGeometry(0.32, 0.4, 0.32), red, 1.55, GROUND + 0.7, -1.35);
+      add(new THREE.BoxGeometry(0.24, 0.35, 0.24), red, 1.55, GROUND + 1.07, -1.35);
+      const tc = add(new THREE.ConeGeometry(0.18, 0.4, 8), green, 1.55, GROUND + 1.45, -1.35); tc.rotation.y = Math.PI / 8;
+      spire(1.55, GROUND + 1.65, -1.35, 0.2, 0.03);
+      block(1.65, 0.65, 0.6, 0.6, 0.6, m(0xEFE3C8), 0x5E7FA0);
+      block(-1.7, 0.45, 0.6, 0.6, 0.7, m(0xE4D6BC), 0x7A4E3A);
+      block(0.9, 1.65, 0.55, 0.45, 0.5, m(0xDCE4EE));
+      pond(-1.25, 1.55, 0.55, 1.5);
+      [[-2.1, -0.7], [2.25, -0.2], [0.1, 2.15], [-0.3, 1.0], [2.0, 1.45], [-2.3, 0.9]].forEach(function (p) { tree(p[0], p[1], 'round'); });
+      puddle(0.7, 0.95, 0.3); puddle(-0.8, 0.5, 0.22); puddle(1.15, -0.2, 0.18); puddle(-1.4, -0.8, 0.22); puddle(0.0, 1.55, 0.2);
+      C.probe.set(0.3, 0.9, 0.9);
+    }
+
+    if (key === 'ala') {
+      // Zailiysky Alatau with permanent snow caps
+      const rockMat = m(0x7D8DA8);
+      [[-1.15, -1.65, 0.95, 1.9], [0.3, -1.85, 1.05, 2.5], [1.6, -1.45, 0.8, 1.7]].forEach(function (p) {
+        const cone = add(new THREE.ConeGeometry(p[2], p[3], 7), rockMat, p[0], GROUND + p[3] / 2, p[1]);
+        cone.rotation.y = p[0];
+        const hs = p[3] * 0.38;
+        const capC = add(new THREE.ConeGeometry(p[2] * 0.39, hs, 7), capMat, p[0], GROUND + p[3] - hs / 2 + 0.01, p[1]);
+        capC.rotation.y = p[0];
+      });
+      // Kok-Tobe TV tower with a beacon
+      const steel = m(0xE6E8EE, { metalness: 0.4, roughness: 0.4 });
+      add(new THREE.CylinderGeometry(0.035, 0.08, 2.9, 8), steel, 1.85, GROUND + 1.45, 0.3);
+      add(new THREE.CylinderGeometry(0.17, 0.17, 0.06, 16), steel, 1.85, GROUND + 2.0, 0.3);
+      add(new THREE.CylinderGeometry(0.12, 0.12, 0.05, 16), steel, 1.85, GROUND + 2.3, 0.3);
+      const beacon = add(new THREE.SphereGeometry(0.045, 8, 6), beaconMat, 1.85, GROUND + 2.93, 0.3);
+      beacon.castShadow = false; C.beacon = beacon;
+      // Glass towers
+      add(new THREE.BoxGeometry(0.5, 1.7, 0.5), glassMat, -0.2, GROUND + 0.85, 0.2);
+      add(new THREE.BoxGeometry(0.42, 1.25, 0.42), glassMat, 0.55, GROUND + 0.62, -0.3);
+      [[-0.2, 0.2, 0.5, 1.7], [0.55, -0.3, 0.42, 1.25]].forEach(function (t) {
+        const gc = new THREE.Mesh(new THREE.BoxGeometry(t[2] * 1.02, 0.05, t[2] * 1.02), capMat);
+        gc.position.set(t[0], GROUND + t[3] + 0.025, t[1]); gc.visible = false; g.add(gc); C.snowCaps.push(gc);
+      });
+      block(-1.4, 0.4, 0.7, 0.55, 0.6, m(0xEADBC4), 0x9A5B3E);
+      block(0.9, 1.4, 0.6, 0.5, 0.5, m(0xDDE3EE));
+      block(-0.7, 1.55, 0.55, 0.45, 0.45, m(0xF2C6A0), 0x6B7F5A);
+      [[-2.1, 0.0], [-2.0, 1.2], [0.1, 2.15], [1.9, 1.35], [-0.5, 0.95], [2.3, -0.5], [-1.9, -0.9]].forEach(function (p) { tree(p[0], p[1], 'apple'); });
+      puddle(0.3, 0.9, 0.3); puddle(-1.0, -0.25, 0.22); puddle(1.25, 0.55, 0.18); puddle(-1.2, 1.15, 0.2); puddle(0.9, -1.0, 0.18);
+      C.probe.set(0.3, 0.9, 0.95);
+    }
+
+    if (winList.length) {
+      const inst = new THREE.InstancedMesh(new THREE.PlaneGeometry(0.09, 0.12), windowMat, winList.length);
+      const dummy = new THREE.Object3D();
+      winList.forEach(function (w, i) { dummy.position.set(w[0], w[1], w[2]); dummy.rotation.set(0, w[3], 0); dummy.updateMatrix(); inst.setMatrixAt(i, dummy.matrix); });
+      g.add(inst);
+    }
+    island.add(g);
+    city = C;
+    cubeFrame = 0;
+  }
+
+  // ---------- Sky objects ----------
   const sun = new THREE.Mesh(new THREE.SphereGeometry(0.6, 24, 16), new THREE.MeshBasicMaterial({ color: 0xFFD27A, fog: false }));
   const sunGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: radialTexture('rgba(255,210,120,0.9)', 'rgba(255,170,60,0)'), blending: THREE.AdditiveBlending, depthWrite: false, fog: false, transparent: true }));
   sunGlow.scale.set(5, 5, 1); sun.add(sunGlow); scene.add(sun);
@@ -416,48 +693,78 @@ input[type="range"] { width: 100%; accent-color: var(--sun); min-height: 32px; }
   const moonGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: radialTexture('rgba(200,210,255,0.6)', 'rgba(200,210,255,0)'), blending: THREE.AdditiveBlending, depthWrite: false, fog: false, transparent: true }));
   moonGlow.scale.set(3, 3, 1); moon.add(moonGlow); scene.add(moon);
 
-  // Stars
   const starGeo = new THREE.BufferGeometry();
   const sp = new Float32Array(700 * 3);
+  const sr = rng(5);
   for (let i = 0; i < 700; i++) {
-    const th = Math.random() * Math.PI * 2, ph = Math.acos(Math.random() * 0.9);
+    const th = sr() * Math.PI * 2, ph = Math.acos(sr() * 0.9);
     sp[i * 3] = 60 * Math.sin(ph) * Math.cos(th); sp[i * 3 + 1] = 60 * Math.cos(ph); sp[i * 3 + 2] = 60 * Math.sin(ph) * Math.sin(th);
   }
   starGeo.setAttribute('position', new THREE.BufferAttribute(sp, 3));
   const starMat = new THREE.PointsMaterial({ color: 0xFFFFFF, size: 0.35, transparent: true, opacity: 0, fog: false, depthWrite: false });
   scene.add(new THREE.Points(starGeo, starMat));
 
-  // Clouds
-  const cloudMat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, flatShading: true, roughness: 1, transparent: true, opacity: 0.96 });
-  const clouds = [];
-  const cloudWhite = new THREE.Color(0xFFFFFF), cloudGrey = new THREE.Color(0x5E6678);
-  for (let i = 0; i < 12; i++) {
-    const g = new THREE.Group();
-    const n = 4 + (i % 3);
-    for (let j = 0; j < n; j++) {
-      const s = 0.45 + Math.random() * 0.45;
-      const m = new THREE.Mesh(new THREE.IcosahedronGeometry(s, 1), cloudMat);
-      m.position.set((j - n / 2) * 0.55 + Math.random() * 0.2, Math.random() * 0.35, Math.random() * 0.5 - 0.25);
-      m.castShadow = true; g.add(m);
+  // Volumetric-looking clouds: clusters of soft billboards, shaded from lit top to grey base
+  let clouds = [], puffCount = 0;
+  function buildClouds() {
+    clouds.forEach(function (c) { scene.remove(c); c.children.forEach(function (s) { s.material.dispose(); }); });
+    clouds = []; puffCount = 0;
+    const q = QUALITY[state.quality], r = rng(7);
+    for (let i = 0; i < q.clouds; i++) {
+      const grp = new THREE.Group();
+      const width = 1.3 + r() * 1.3;
+      for (let j = 0; j < q.puffs; j++) {
+        const t = q.puffs > 1 ? j / (q.puffs - 1) : 0.5;
+        const bump = Math.sin(t * Math.PI);
+        const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: puffTex[j % 3], transparent: true, depthWrite: false, opacity: 0 }));
+        const y = r() * 0.75 * bump;
+        const size = (1.0 + r() * 0.9) * (0.65 + 0.55 * bump);
+        s.position.set((t - 0.5) * width * 2 + (r() - 0.5) * 0.4, y, (r() - 0.5) * 0.9);
+        s.scale.set(size * 1.15, size * 0.85, 1);
+        s.userData.h = Math.min(1, y / 0.6 + 0.1);
+        grp.add(s); puffCount++;
+      }
+      grp.userData = { angle: (i / q.clouds) * Math.PI * 2 + r() * 0.3, radius: 3.8 + (i % 4) * 0.8, height: 3.5 + (i % 3) * 0.7, speed: 0.025 + r() * 0.03, amt: 0, rank: (i + 0.5) / q.clouds };
+      scene.add(grp); clouds.push(grp);
     }
-    g.userData = { angle: (i / 12) * Math.PI * 2, radius: 3.6 + (i % 4) * 0.7, height: 3.6 + (i % 3) * 0.6, speed: 0.04 + (i % 5) * 0.01, scale: 0 };
-    g.scale.setScalar(0.001);
-    scene.add(g); clouds.push(g);
+  }
+
+  // Ground mist for fog and rain
+  const mist = [];
+  const mr = rng(13);
+  for (let i = 0; i < 12; i++) {
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: softTex, transparent: true, depthWrite: false, opacity: 0 }));
+    const a = (i / 12) * Math.PI * 2;
+    s.userData = { a: a, r: 2.6 + mr() * 2.4, y: -0.6 + mr() * 1.2, sp: 0.02 + mr() * 0.03 };
+    s.scale.set(6 + mr() * 3, 2.4 + mr(), 1);
+    scene.add(s); mist.push(s);
   }
 
   // Lightning bolt
   const boltMat = new THREE.LineBasicMaterial({ color: 0xE8F0FF, transparent: true, opacity: 0, fog: false });
   const boltGeo = new THREE.BufferGeometry();
   boltGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(9 * 3), 3));
-  const bolt = new THREE.Line(boltGeo, boltMat);
-  scene.add(bolt);
+  scene.add(new THREE.Line(boltGeo, boltMat));
+
+  // Rain splashes on the island
+  const splashes = [];
+  const splashGeo = new THREE.RingGeometry(0.02, 0.045, 18);
+  for (let i = 0; i < 60; i++) {
+    const s = new THREE.Mesh(splashGeo, new THREE.MeshBasicMaterial({ color: 0xDDE8FF, transparent: true, opacity: 0, depthWrite: false }));
+    s.rotation.x = -Math.PI / 2; s.visible = false; s.userData.t = 1;
+    scene.add(s); splashes.push(s);
+  }
+  let splashIdx = 0;
+  function spawnSplash(x, z) {
+    const s = splashes[splashIdx++ % splashes.length];
+    s.position.set(x, GROUND + island.position.y + 0.012, z); s.userData.t = 0; s.visible = true;
+  }
 
   // Precipitation (rebuilt on quality change)
-  const circleTex = radialTexture('rgba(255,255,255,1)', 'rgba(255,255,255,0)');
   let rain = null, snow = null;
   function buildParticles() {
-    if (rain) { scene.remove(rain.obj); rain.obj.geometry.dispose(); }
-    if (snow) { scene.remove(snow.obj); snow.obj.geometry.dispose(); }
+    if (rain) { scene.remove(rain.obj); rain.obj.geometry.dispose(); rain.obj.material.dispose(); }
+    if (snow) { scene.remove(snow.obj); snow.obj.geometry.dispose(); snow.obj.material.dispose(); }
     const q = QUALITY[state.quality];
     const rn = q.rain, rp = new Float32Array(rn * 6), rs = new Float32Array(rn);
     for (let i = 0; i < rn; i++) {
@@ -473,11 +780,12 @@ input[type="range"] { width: 100%; accent-color: var(--sun); min-height: 32px; }
       spp.set([(Math.random() - 0.5) * 12, Math.random() * 12 - 4, (Math.random() - 0.5) * 10], i * 3); ph[i] = Math.random() * 6.28;
     }
     const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.BufferAttribute(spp, 3));
-    const so = new THREE.Points(sg, new THREE.PointsMaterial({ size: 0.12, map: circleTex, transparent: true, opacity: 0, depthWrite: false, color: 0xFFFFFF }));
+    const so = new THREE.Points(sg, new THREE.PointsMaterial({ size: 0.12, map: softTex, transparent: true, opacity: 0, depthWrite: false, color: 0xFFFFFF }));
     so.frustumCulled = false; scene.add(so);
     snow = { obj: so, phase: ph, n: sn };
   }
 
+  let cubeFrame = 0;
   function applyQuality() {
     const q = QUALITY[state.quality];
     renderer.setPixelRatio(q.dpr);
@@ -485,9 +793,11 @@ input[type="range"] { width: 100%; accent-color: var(--sun); min-height: 32px; }
     sunLight.castShadow = q.shadows;
     scene.traverse(function (o) { if (o.isMesh && o.material) o.material.needsUpdate = true; });
     buildParticles();
+    buildClouds();
     resize();
+    cubeFrame = 0;
     document.getElementById('dpr').textContent = '×' + q.dpr.toFixed(2).replace(/\.?0+$/, '');
-    document.getElementById('parts').textContent = (q.rain + q.snow).toLocaleString('ru-RU');
+    document.getElementById('parts').textContent = (q.rain + q.snow + puffCount).toLocaleString('ru-RU');
   }
 
   function resize() {
@@ -512,125 +822,167 @@ input[type="range"] { width: 100%; accent-color: var(--sun); min-height: 32px; }
   phone.addEventListener('pointerup', function () { drag = null; });
   phone.addEventListener('pointerleave', function () { pointer.tx = 0; pointer.ty = 0; });
 
-  // Animated state
-  const cur = { cloud: 0.12, dark: 0, rain: 0, snow: 0, fog: 0, storm: 0, snowCover: 0, wet: 0 };
-  const C = function (h) { return new THREE.Color(h); };
+  // ---------- Frame loop ----------
+  const cur = { cloud: 0.12, dark: 0, rain: 0, snow: 0, fog: 0, storm: 0, snowCover: 0, wet: 0, puddle: 0 };
+  const Col = function (h) { return new THREE.Color(h); };
   const PAL = {
-    dayTop: C(0x1D4ED8), dayBot: C(0x8EC2FF),
-    nightTop: C(0x04071A), nightBot: C(0x1A2152),
-    duskTop: C(0x2B3A8C), duskBot: C(0xFF9A5A),
-    greyTop: C(0x4A5468), greyBot: C(0x9AA3B5),
-    nightGreyTop: C(0x0C101C), nightGreyBot: C(0x262C3E)
+    dayTop: Col(0x1D4ED8), dayBot: Col(0x8EC2FF),
+    nightTop: Col(0x04071A), nightBot: Col(0x1A2152),
+    duskTop: Col(0x2B3A8C), duskBot: Col(0xFF9A5A),
+    greyTop: Col(0x4A5468), greyBot: Col(0x9AA3B5),
+    nightGreyTop: Col(0x0C101C), nightGreyBot: Col(0x262C3E),
+    sunset: Col(0xFFB07A), cloudShade: Col(0x7D88A8), cloudStorm: Col(0x3E4558), hazeWarm: Col(0xFFB070), pureWhite: Col(0xFFFFFF)
   };
-  const tmpA = new THREE.Color(), tmpB = new THREE.Color(), tmpC = new THREE.Color(), tmpD = new THREE.Color();
-
-  let last = performance.now(), acc = 0, frames = 0, fpsT = 0, lightningT = 2, flash = 0, clock = 0;
+  const tA = new THREE.Color(), tB = new THREE.Color(), tC = new THREE.Color(), tD = new THREE.Color(), lit = new THREE.Color(), shade = new THREE.Color();
+  const probeWorld = new THREE.Vector3();
+  let last = performance.now(), acc = 0, frames = 0, fpsT = 0, lightningT = 2, flash = 0, clock = 0, hudT = 0;
 
   function frame(now) {
     requestAnimationFrame(frame);
     let dt = Math.min(0.05, (now - last) / 1000);
-    const cap = QUALITY[state.quality].cap;
-    if (cap) { acc += dt; if (acc < 1 / cap) { last = now; return; } dt = acc; acc = 0; }
+    const q = QUALITY[state.quality];
+    if (q.cap) { acc += dt; if (acc < 1 / q.cap) { last = now; return; } dt = Math.min(0.1, acc); acc = 0; }
     last = now;
     clock += dt;
     frames++; fpsT += dt;
     if (fpsT >= 0.5) { document.getElementById('fps').textContent = Math.round(frames / fpsT); frames = 0; fpsT = 0; }
 
+    hudT += dt;
     if (state.playing) {
       state.minutes = (state.minutes + dt * 72) % 1440;
-      timeInput.value = String(Math.round(state.minutes));
-      updateHud();
+      timeInput.value = String(Math.floor(state.minutes));
+      if (hudT > 0.1) { updateHud(); hudT = 0; }
+    } else if (state.realtime && hudT > 1) {
+      tickClock(); timeInput.value = String(Math.floor(state.minutes)); updateHud(); hudT = 0;
     }
 
-    // Ease toward target weather
+    // Ease toward the target weather
     const w = WEATHER[state.weather];
     const k = 1 - Math.exp(-dt * 1.6);
     ['cloud', 'dark', 'rain', 'snow', 'fog', 'storm'].forEach(function (p) { cur[p] += (w[p] - cur[p]) * k; });
-    cur.snowCover += ((w.snow > 0 ? 1 : 0) - cur.snowCover) * (1 - Math.exp(-dt * (w.snow > 0 ? 0.25 : 0.6)));
-    cur.wet += ((w.rain > 0 ? 1 : 0) - cur.wet) * (1 - Math.exp(-dt * 0.8));
+    cur.snowCover += ((w.snow > 0 ? 1 : 0) - cur.snowCover) * (1 - Math.exp(-dt * (w.snow > 0 ? 0.25 : 0.5)));
+    cur.wet += ((w.rain > 0 ? 1 : 0) - cur.wet) * (1 - Math.exp(-dt * (w.rain > 0 ? 0.8 : 0.12)));
+    cur.puddle += ((w.rain > 0 ? 1 : 0) - cur.puddle) * (1 - Math.exp(-dt * (w.rain > 0 ? 0.35 : 0.05)));
 
-    // Sun and moon positions
-    const m = state.minutes % 1440;
-    let elev, az;
-    if (m >= SUNRISE && m <= SUNSET) {
-      const t = (m - SUNRISE) / (SUNSET - SUNRISE);
-      elev = Math.sin(Math.PI * t); az = Math.cos(Math.PI * t);
-    } else {
-      const nightLen = 1440 - (SUNSET - SUNRISE);
-      const t = ((m - SUNSET + 1440) % 1440) / nightLen;
-      elev = -Math.sin(Math.PI * t); az = -Math.cos(Math.PI * t);
-    }
-    const dayF = THREE.MathUtils.smoothstep(elev, -0.12, 0.3);
-    const twilight = Math.exp(-Math.pow(elev / 0.2, 2));
-    sun.position.set(az * 3.8, 1.8 + elev * 4.2, -8);
-    sun.visible = elev > -0.15;
-    sunGlow.material.opacity = (1 - cur.cloud * 0.85) * THREE.MathUtils.clamp((elev + 0.15) * 4, 0, 1);
-    sun.material.color.setHex(0xFFD27A).lerp(tmpA.setHex(0xFF8A4A), twilight);
-    moon.position.set(-az * 3.8, 1.8 - elev * 4.2, -8);
-    moon.visible = elev < 0.15;
+    // Real sun position for the selected city
+    const cityDef = CITIES[state.city];
+    const sol = solar(cityDef, localNow(cityDef).doy, state.minutes % 1440);
+    const A = sol.az * RAD, E = sol.elev * RAD;
+    const sx = -Math.sin(A) * 4.6, sy = 1.4 + Math.sin(E) * 11, sz = -9;
+    const dayF = THREE.MathUtils.smoothstep(sol.elev, -6, 8);
+    const twilight = Math.exp(-Math.pow(sol.elev / 7, 2)) * (sol.elev > 0 ? 1 : Math.exp(sol.elev / 3));
+    sun.position.set(sx, sy, sz);
+    sun.visible = sol.elev > -3;
+    const sunAmt = (1 - cur.cloud * 0.8) * (1 - cur.fog * 0.7) * THREE.MathUtils.clamp((sol.elev + 4) / 8, 0, 1);
+    sunGlow.material.opacity = sunAmt * 0.85;
+    sun.material.color.setHex(0xFFD27A).lerp(tA.setHex(0xFF8A4A), twilight);
+    moon.position.set(-sx, 1.4 - Math.sin(E) * 11, sz);
+    moon.visible = sol.elev < 3;
     moonGlow.material.opacity = (1 - cur.cloud * 0.9) * (1 - dayF);
 
-    // Sky colors
-    tmpA.copy(PAL.nightTop).lerp(PAL.dayTop, dayF);
-    tmpB.copy(PAL.nightBot).lerp(PAL.dayBot, dayF);
+    // Sky
+    tA.copy(PAL.nightTop).lerp(PAL.dayTop, dayF);
+    tB.copy(PAL.nightBot).lerp(PAL.dayBot, dayF);
     const dusk = twilight * (1 - cur.dark) * 0.85;
-    tmpA.lerp(PAL.duskTop, dusk * 0.6);
-    tmpB.lerp(PAL.duskBot, dusk);
-    tmpC.copy(PAL.nightGreyTop).lerp(PAL.greyTop, dayF);
-    tmpD.copy(PAL.nightGreyBot).lerp(PAL.greyBot, dayF);
+    tA.lerp(PAL.duskTop, dusk * 0.6);
+    tB.lerp(PAL.duskBot, dusk);
+    tC.copy(PAL.nightGreyTop).lerp(PAL.greyTop, dayF);
+    tD.copy(PAL.nightGreyBot).lerp(PAL.greyBot, dayF);
     const over = Math.min(1, cur.dark * 1.1 + cur.fog * 0.5);
-    tmpA.lerp(tmpC, over); tmpB.lerp(tmpD, over);
-    skyMat.uniforms.top.value.copy(tmpA);
-    skyMat.uniforms.bottom.value.copy(tmpB);
-    scene.fog.color.copy(tmpB);
+    tA.lerp(tC, over); tB.lerp(tD, over);
+    skyMat.uniforms.top.value.copy(tA);
+    skyMat.uniforms.bottom.value.copy(tB);
+    skyMat.uniforms.haze.value.copy(tB).lerp(PAL.pureWhite, 0.25 * dayF * (1 - cur.dark)).lerp(PAL.hazeWarm, dusk * 0.7);
+    skyMat.uniforms.sunDir.value.set(sx, sy, sz);
+    skyMat.uniforms.sunCol.value.setHex(0xFFD9A0).lerp(PAL.sunset, twilight);
+    skyMat.uniforms.sunAmt.value = sunAmt;
+    scene.fog.color.copy(tB);
     scene.fog.near = 30 - 23 * cur.fog;
     scene.fog.far = 90 - 72 * cur.fog;
 
-    // Lights
-    sunLight.position.copy(sun.position);
-    sunLight.intensity = elev > 0 ? (0.4 + 1.5 * dayF) * (1 - 0.7 * cur.dark) : 0;
-    sunLight.color.setHex(0xFFF1D6).lerp(tmpA.setHex(0xFF9A5A), twilight);
-    moonLight.position.copy(moon.position);
+    // Lights (key light kept in front of the island so facades stay readable)
+    sunLight.position.set(sx * 2, Math.max(sy, 1.2), 3);
+    sunLight.intensity = sol.elev > 0 ? (0.4 + 1.5 * dayF) * (1 - 0.7 * cur.dark) * (1 - 0.4 * cur.fog) : 0;
+    sunLight.color.setHex(0xFFF1D6).lerp(tA.setHex(0xFF9A5A), twilight);
+    moonLight.position.set(-sx * 2, 6, 3);
     moonLight.intensity = (1 - dayF) * 0.35 * (1 - 0.6 * cur.cloud);
-    hemi.intensity = 0.45 + 0.65 * dayF + flash * 2.2;
-    hemi.color.copy(tmpB);
-    windows.opacity = THREE.MathUtils.clamp(1 - dayF * 1.6 + cur.dark * 0.4, 0, 1);
+    hemi.intensity = 0.45 + 0.4 * dayF + flash * 2.2;
+    hemi.color.copy(tB);
+    windowMat.color.copy(winDay).lerp(winNight, THREE.MathUtils.clamp(1 - dayF * 1.5 + cur.dark * 0.4, 0, 1));
     starMat.opacity = (1 - dayF) * (1 - cur.cloud) * 0.9;
 
-    // Ground: wet and snow cover
-    grassMat.color.copy(grassBase).lerp(grassWet, cur.wet * 0.7).lerp(snowCol, cur.snowCover);
-    snowCaps.forEach(function (c) { c.visible = cur.snowCover > 0.15; c.scale.y = cur.snowCover; });
+    // Ground: wet, snow, puddles, ice
+    grassMat.color.copy(grassBase).lerp(grassWet, cur.wet * 0.7).lerp(white, cur.snowCover);
+    grassMat.roughness = 0.9 - 0.45 * cur.wet * (1 - cur.snowCover);
+    city.snowables.forEach(function (s) { s.mat.color.copy(s.base).lerp(white, cur.snowCover * s.k); });
+    city.snowCaps.forEach(function (c) { c.visible = cur.snowCover > 0.15; c.scale.y = Math.max(0.01, cur.snowCover); });
+    const pv = cur.puddle * (1 - cur.snowCover);
+    puddleMat.opacity = pv * 0.95;
+    wetRimMat.opacity = pv * 0.45;
+    city.puddles.forEach(function (p) { p.visible = pv > 0.02; const s = (0.3 + 0.7 * cur.puddle) * p.userData.rim; p.scale.set(s * p.userData.sx, s, 1); });
+    waterMat.color.copy(waterBase).lerp(iceCol, cur.snowCover);
+    waterMat.roughness = 0.06 + 0.5 * cur.snowCover;
+    if (city.beacon) city.beacon.visible = dayF < 0.6 && (reduced || Math.sin(clock * 3) > 0);
 
     // Clouds
-    cloudMat.color.copy(cloudWhite).lerp(cloudGrey, cur.dark);
-    if (dayF < 0.5) cloudMat.color.multiplyScalar(0.62 + 0.76 * dayF);
-    clouds.forEach(function (g, i) {
-      const u = g.userData;
-      const target = i < Math.round(cur.cloud * clouds.length + 0.4) ? 1 : 0;
-      u.scale += (target - u.scale) * (1 - Math.exp(-dt * 1.5));
+    lit.copy(PAL.pureWhite).lerp(PAL.sunset, twilight * 0.7 * (1 - cur.dark)).lerp(PAL.cloudStorm, cur.dark * 0.75);
+    lit.multiplyScalar(0.3 + 0.7 * Math.max(dayF, 0.08 + flash));
+    shade.copy(PAL.cloudShade).lerp(PAL.cloudStorm, cur.dark).multiplyScalar(0.3 + 0.7 * Math.max(dayF, 0.08 + flash));
+    clouds.forEach(function (grp) {
+      const u = grp.userData;
+      const target = u.rank < cur.cloud * 1.05 ? 1 : 0;
+      u.amt += (target - u.amt) * (1 - Math.exp(-dt * 1.2));
       if (!reduced) u.angle += u.speed * dt * (1 + cur.storm * 2);
-      g.position.set(Math.cos(u.angle) * u.radius, u.height, Math.sin(u.angle) * u.radius * 0.6);
-      g.scale.setScalar(Math.max(0.001, u.scale * (0.9 + cur.dark * 0.35)));
-      g.lookAt(0, u.height, 0);
+      grp.position.set(Math.cos(u.angle) * u.radius, u.height - cur.dark * 0.7, Math.sin(u.angle) * u.radius * 0.6);
+      grp.scale.setScalar(1 + cur.dark * 0.45);
+      grp.visible = u.amt > 0.01;
+      grp.children.forEach(function (s) {
+        s.material.color.copy(shade).lerp(lit, s.userData.h);
+        s.material.opacity = u.amt * (0.7 + 0.25 * s.userData.h);
+      });
     });
 
-    // Rain
+    // Mist
+    const mistAmt = Math.min(1, cur.fog + cur.rain * 0.25);
+    mist.forEach(function (s) {
+      const u = s.userData;
+      if (!reduced) u.a += u.sp * dt;
+      s.position.set(Math.cos(u.a) * u.r, u.y, Math.sin(u.a) * u.r * 0.7);
+      s.material.color.copy(tB).lerp(PAL.pureWhite, 0.2 * dayF);
+      s.material.opacity = mistAmt * 0.55;
+      s.visible = mistAmt > 0.02;
+    });
+
+    // Rain and splashes
+    const groundY = GROUND + island.position.y;
     const rv = Math.min(1, cur.rain);
     rain.obj.material.opacity = rv * 0.65;
     rain.obj.visible = rv > 0.02;
     if (rain.obj.visible && !reduced) {
       const pos = rain.obj.geometry.attributes.position.array;
       const wind = 0.08 + cur.storm * 0.25;
+      let budget = Math.round(q.splash * rv);
       for (let i = 0; i < rain.n; i++) {
         const o = i * 6, v = rain.speed[i] * dt * (0.8 + cur.rain * 0.4);
         pos[o + 1] -= v; pos[o + 4] -= v; pos[o] -= v * wind; pos[o + 3] -= v * wind;
-        if (pos[o + 4] < -4) {
-          const x = (Math.random() - 0.5) * 12, z = (Math.random() - 0.5) * 10, y = 8;
-          pos[o] = x; pos[o + 1] = y; pos[o + 2] = z; pos[o + 3] = x - 0.3 * wind; pos[o + 4] = y - 0.3; pos[o + 5] = z;
+        const x = pos[o + 3], z = pos[o + 5];
+        const onIsland = x * x + z * z < 7.3 && pos[o + 4] < groundY;
+        if (onIsland && budget > 0) { spawnSplash(x, z); budget--; }
+        if (onIsland || pos[o + 4] < -4) {
+          const nx = (Math.random() - 0.5) * 12, nz = (Math.random() - 0.5) * 10, ny = 8;
+          pos[o] = nx; pos[o + 1] = ny; pos[o + 2] = nz; pos[o + 3] = nx - 0.3 * wind; pos[o + 4] = ny - 0.3; pos[o + 5] = nz;
         }
       }
       rain.obj.geometry.attributes.position.needsUpdate = true;
     }
+    splashes.forEach(function (s) {
+      if (!s.visible) return;
+      s.userData.t += dt;
+      const t = s.userData.t / 0.35;
+      if (t >= 1) { s.visible = false; return; }
+      s.scale.setScalar(1 + t * 5);
+      s.material.opacity = 0.75 * (1 - t);
+    });
 
     // Snow
     snow.obj.material.opacity = Math.min(1, cur.snow) * 0.95;
@@ -641,7 +993,8 @@ input[type="range"] { width: 100%; accent-color: var(--sun); min-height: 32px; }
         const o = i * 3;
         pos[o + 1] -= dt * (0.6 + (i % 5) * 0.12);
         pos[o] += Math.sin(clock * 0.8 + snow.phase[i]) * dt * 0.25;
-        if (pos[o + 1] < -4) { pos[o + 1] = 8; pos[o] = (Math.random() - 0.5) * 12; pos[o + 2] = (Math.random() - 0.5) * 10; }
+        const landed = pos[o] * pos[o] + pos[o + 2] * pos[o + 2] < 7.3 && pos[o + 1] < groundY;
+        if (landed || pos[o + 1] < -4) { pos[o + 1] = 8; pos[o] = (Math.random() - 0.5) * 12; pos[o + 2] = (Math.random() - 0.5) * 10; }
       }
       snow.obj.geometry.attributes.position.needsUpdate = true;
     }
@@ -658,11 +1011,12 @@ input[type="range"] { width: 100%; accent-color: var(--sun); min-height: 32px; }
         let x = (Math.random() - 0.5) * 6, y = 4.2, z = -1 - Math.random() * 2;
         for (let i = 0; i < 9; i++) { p[i * 3] = x; p[i * 3 + 1] = y; p[i * 3 + 2] = z; x += (Math.random() - 0.5) * 0.7; y -= 0.55; }
         boltGeo.attributes.position.needsUpdate = true;
+        cubeFrame = 0;
       }
     }
     skyMat.uniforms.flash.value = flash * 0.35;
 
-    // Floating rocks and island bob
+    // Island motion
     if (!reduced) {
       island.position.y = Math.sin(clock * 0.6) * 0.08;
       rocks.forEach(function (r) { r.position.y = r.userData.base + Math.sin(clock * 0.8 + r.userData.phase) * 0.15; r.rotation.y += dt * 0.3; });
@@ -674,14 +1028,30 @@ input[type="range"] { width: 100%; accent-color: var(--sun); min-height: 32px; }
     const par = state.parallax && !reduced ? 1 : 0;
     pointer.x += (pointer.tx * par - pointer.x) * (1 - Math.exp(-dt * 3));
     pointer.y += (pointer.ty * par - pointer.y) * (1 - Math.exp(-dt * 3));
-    const yaw = pointer.x * 0.14, pitch = 0.1 - pointer.y * 0.06;
+    const yaw = pointer.x * 0.14, pitch = 0.2 - pointer.y * 0.06;
     camera.position.set(Math.sin(yaw) * CAM_DIST, LOOK.y + Math.sin(pitch) * CAM_DIST, Math.cos(yaw) * CAM_DIST);
     camera.lookAt(LOOK);
+
+    // Refresh the reflection probe without the reflective surfaces themselves
+    if (cubeFrame-- <= 0) {
+      cubeFrame = q.cubeEvery;
+      island.updateMatrixWorld();
+      probeWorld.copy(city.probe); island.localToWorld(probeWorld);
+      cubeCam.position.copy(probeWorld);
+      cubeCam.updateMatrixWorld(true);
+      const hidden = city.waters.concat(city.puddles, splashes, [rain.obj, snow.obj]);
+      const was = hidden.map(function (o) { return o.visible; });
+      hidden.forEach(function (o) { o.visible = false; });
+      cubeCam.update(renderer, scene);
+      hidden.forEach(function (o, i) { o.visible = was[i]; });
+    }
 
     renderer.render(scene, camera);
   }
 
+  buildCity(state.city);
   applyQuality();
+  tickClock();
   syncUI();
   requestAnimationFrame(frame);
 })();

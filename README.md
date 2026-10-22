@@ -8,4 +8,4 @@ Android · Россия и СНГ.
 
 - [`docs/market-research.md`](docs/market-research.md) — исследование рынка, конкуренты, боли пользователей, позиционирование, функции, монетизация, стек.
 - [`design/`](design/) — исходники макетов (12 артбордов, Android 412×915) и описание экранов.
-- [`prototype/scene3d.html`](prototype/scene3d.html) — живой 3D-прототип главной сцены на three.js: погода, время суток, уровни качества, счётчик FPS. Опубликован: https://claude.ai/artifact/1Q5YZuCvu9H2seuWVqfCvR
+- [`prototype/scene3d.html`](prototype/scene3d.html) — живой 3D-прототип главной сцены на three.js: острова-города (Москва, Петербург, Казань, Алматы), реальное положение солнца по дате и времени города, объёмные облака, лужи и вода с настоящими отражениями, 6 типов погоды, уровни качества, счётчик FPS. Опубликован: https://claude.ai/artifact/1Q5YZuCvu9H2seuWVqfCvR
