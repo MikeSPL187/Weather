@@ -21,13 +21,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.aura.WeatherUiState
 import app.aura.WeatherViewModel
-import app.aura.ui.assistant.AssistantScreen
 import app.aura.ui.cities.CitiesScreen
 import app.aura.ui.components.Tab
 import app.aura.ui.components.TabBar
 import app.aura.ui.forecast.ForecastScreen
 import app.aura.ui.now.NowScreen
 import app.aura.ui.scene.skyBrush
+import app.aura.ui.tips.TipsScreen
 
 @Composable
 fun AuraApp(viewModel: WeatherViewModel = viewModel()) {
@@ -105,7 +105,7 @@ fun AuraScaffold(
                 description = "3D-карта осадков с шагом времени готова в макетах и появится после подключения радарных данных.",
                 contentPadding = barPadding,
             )
-            Tab.ASSISTANT -> AssistantScreen(state, barPadding)
+            Tab.TIPS -> TipsScreen(state, barPadding)
         }
         TabBar(
             selected = tab,

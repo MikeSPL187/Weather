@@ -65,7 +65,7 @@ class ScreensScreenshotTest {
     fun forecastTenDays() = screen(state(Cities.moscow, afternoon, Condition.CLEAR), Tab.FORECAST)
 
     @Test
-    fun assistant() = screen(state(Cities.moscow, LocalDateTime.of(2026, 10, 22, 9, 0), Condition.CLOUDY), Tab.ASSISTANT)
+    fun tips() = screen(state(Cities.moscow, LocalDateTime.of(2026, 10, 22, 9, 0), Condition.CLOUDY), Tab.TIPS)
 
     @Test
     fun cities() {

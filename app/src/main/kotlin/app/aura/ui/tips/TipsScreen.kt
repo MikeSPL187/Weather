@@ -1,4 +1,4 @@
-package app.aura.ui.assistant
+package app.aura.ui.tips
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -54,7 +54,7 @@ import app.aura.ui.theme.AuraType
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun AssistantScreen(state: WeatherUiState, contentPadding: PaddingValues) {
+fun TipsScreen(state: WeatherUiState, contentPadding: PaddingValues) {
     var selected by remember { mutableIntStateOf(0) }
     Column(
         modifier = Modifier
@@ -67,14 +67,15 @@ fun AssistantScreen(state: WeatherUiState, contentPadding: PaddingValues) {
     ) {
         Row(Modifier.padding(top = 12.dp, start = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(
-                Modifier.size(44.dp).clip(RoundedCornerShape(22.dp)).background(
-                    Brush.radialGradient(listOf(Color.White, Color(0xFFFFE3A0), AuraColors.Sun, Color(0xFF6E5BD6))),
-                ),
-            )
+                Modifier.size(44.dp).clip(RoundedCornerShape(14.dp)).background(AuraColors.Sun.copy(alpha = 0.2f)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(AuraIcons.Bulb, contentDescription = null, tint = AuraColors.Sun, modifier = Modifier.size(24.dp))
+            }
             Spacer(Modifier.width(12.dp))
             Column {
-                Text("Ассистент", style = AuraType.Title, color = AuraColors.TextPrimary)
-                Text("Советы из прогноза для ${state.city.name}", style = AuraType.Caption, color = AuraColors.TextSecondary)
+                Text("Советы", style = AuraType.Title, color = AuraColors.TextPrimary)
+                Text("Что надеть и когда выйти · ${state.city.name}", style = AuraType.Caption, color = AuraColors.TextSecondary)
             }
         }
 
@@ -155,10 +156,10 @@ fun AssistantScreen(state: WeatherUiState, contentPadding: PaddingValues) {
 
             GlassCard(Modifier.fillMaxWidth()) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(AuraIcons.Sparkle, contentDescription = null, tint = AuraColors.Sun, modifier = Modifier.size(20.dp))
+                    Icon(AuraIcons.Bulb, contentDescription = null, tint = AuraColors.Sun, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(12.dp))
                     Text(
-                        "Советы считаются прямо на телефоне из почасового прогноза: температура по ощущениям, осадки, ветер, УФ и время восхода и заката.",
+                        "Советы считаются прямо на телефоне по понятным правилам из почасового прогноза: температура по ощущениям, осадки, ветер, УФ и время восхода и заката. Без внешних сервисов и без ИИ.",
                         style = AuraType.Caption,
                         color = AuraColors.TextSecondary,
                     )

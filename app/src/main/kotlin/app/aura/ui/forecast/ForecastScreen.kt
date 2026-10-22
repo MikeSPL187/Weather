@@ -74,7 +74,7 @@ fun ForecastScreen(state: WeatherUiState, contentPadding: PaddingValues) {
         if (state.weekSummary.isNotEmpty()) item {
             GlassCard(Modifier.fillMaxWidth().padding(bottom = 6.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(AuraIcons.Sparkle, contentDescription = null, tint = AuraColors.Sun, modifier = Modifier.size(20.dp))
+                    Icon(AuraIcons.Calendar, contentDescription = null, tint = AuraColors.Sun, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(12.dp))
                     Text(state.weekSummary, style = AuraType.Body, color = AuraColors.TextPrimary)
                 }

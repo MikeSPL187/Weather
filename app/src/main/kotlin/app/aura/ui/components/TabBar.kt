@@ -30,7 +30,7 @@ enum class Tab(val label: String, val icon: ImageVector) {
     NOW("Сейчас", AuraIcons.Home),
     FORECAST("Прогноз", AuraIcons.Calendar),
     MAP("Карта", AuraIcons.Layers),
-    ASSISTANT("Ассистент", AuraIcons.Sparkle),
+    TIPS("Советы", AuraIcons.Bulb),
 }
 
 /** Floating glass pill with four tabs, as in the mockups. */
