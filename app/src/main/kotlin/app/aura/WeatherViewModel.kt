@@ -1,6 +1,7 @@
 package app.aura
 
 import android.app.Application
+import androidx.glance.appwidget.updateAll
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.aura.core.advice.Activity
@@ -22,6 +23,10 @@ import app.aura.core.solar.SolarCalculator
 import app.aura.core.solar.SolarPosition
 import app.aura.core.solar.SunTimes
 import app.aura.data.CityStore
+import app.aura.widget.AuraWidget
+import app.aura.widget.WidgetRefreshWorker
+import app.aura.widget.WidgetStore
+import app.aura.widget.toWidgetSnapshot
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -113,6 +118,7 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
     private val live = OpenMeteoWeatherRepository()
     private val sample = SampleWeatherRepository()
     private val cache = mutableMapOf<String, Forecast>()
+    private val widgets = WidgetStore(application)
 
     private val _state = MutableStateFlow(WeatherUiState())
     val state: StateFlow<WeatherUiState> = _state.asStateFlow()
@@ -215,13 +221,18 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
         val updated = current.cities.filterNot { it.id == id }
         store.save(updated)
         cache.remove(id)
+        // The widget follows the first city; if that one went, fetch the new first city.
+        if (current.cities.first().id == id) WidgetRefreshWorker.refreshNow(getApplication())
         _state.update { it.copy(cities = updated, cityWeather = it.cityWeather - id) }
         if (current.city.id == id) select(updated.first())
     }
 
     private suspend fun load(city: City) {
         val forecast = try {
-            live.forecast(city, localNow(city)).also { cache[city.id] = it }
+            live.forecast(city, localNow(city)).also {
+                cache[city.id] = it
+                publishToWidget(it)
+            }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -246,12 +257,20 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    /** The home-screen widget shows the first saved city; keep it in step with what the app just fetched. */
+    private fun publishToWidget(forecast: Forecast) {
+        if (forecast.city.id != _state.value.cities.firstOrNull()?.id) return
+        widgets.save(forecast.toWidgetSnapshot(localNow(forecast.city)))
+        viewModelScope.launch { runCatching { AuraWidget().updateAll(getApplication()) } }
+    }
+
     private fun prefetchCityList(cities: List<City>) {
         viewModelScope.launch {
             cities.forEach { city ->
                 if (cache.containsKey(city.id)) return@forEach
                 val forecast = runCatching { live.forecast(city, localNow(city)) }.getOrNull() ?: return@forEach
                 cache[city.id] = forecast
+                publishToWidget(forecast)
                 val sun = SolarCalculator.position(forecast.city, localNow(forecast.city).toLocalDate(), localNow(forecast.city).let { it.hour * 60.0 + it.minute })
                 _state.update {
                     it.copy(cityWeather = it.cityWeather + (city.id to CityWeather(forecast.current.temperatureC, forecast.current.condition, sun.elevationDeg < -2)))

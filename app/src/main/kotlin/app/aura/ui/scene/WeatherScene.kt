@@ -71,6 +71,14 @@ fun WeatherScene(
     }
 }
 
+/**
+ * One still frame of the diorama laid out in [area] from the scope's origin, without the sky
+ * behind it. Home-screen widgets paint it into a bitmap.
+ */
+fun DrawScope.drawStillScene(scene: SceneState, area: Size = size) {
+    World(this, scene, time = 0f, still = true, tilt = Offset.Zero, area = area).draw(Particles(Random(42)))
+}
+
 @Composable
 private fun rememberReduceMotion(): Boolean {
     val context = LocalContext.current
@@ -139,9 +147,16 @@ private class Particles(random: Random) {
 private const val INK = 0xFF151A33
 
 /** One frame of the diorama. Holds the derived lighting so every element shades consistently. */
-private class World(val ds: DrawScope, val scene: SceneState, val time: Float, val still: Boolean, val tilt: Offset) {
-    val w = ds.size.width
-    val h = ds.size.height
+private class World(
+    val ds: DrawScope,
+    val scene: SceneState,
+    val time: Float,
+    val still: Boolean,
+    val tilt: Offset,
+    area: Size = ds.size,
+) {
+    val w = area.width
+    val h = area.height
     val u = w / 390f
     val cx = w / 2
     val bob = if (still) 0f else sin(time * 0.6f) * 3 * u

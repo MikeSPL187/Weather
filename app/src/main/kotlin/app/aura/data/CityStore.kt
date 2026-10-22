@@ -31,23 +31,23 @@ class CityStore(context: Context) {
             prefs.edit().putString(KEY_SELECTED, value).apply()
         }
 
-    private fun City.toJson() = JSONObject()
-        .put("id", id).put("name", name).put("region", region)
-        .put("lat", latitude).put("lon", longitude)
-        .put("offset", utcOffsetMinutes).put("landmark", landmark.name)
-
-    private fun JSONObject.toCity() = City(
-        id = getString("id"),
-        name = getString("name"),
-        region = optString("region"),
-        latitude = getDouble("lat"),
-        longitude = getDouble("lon"),
-        utcOffsetMinutes = getInt("offset"),
-        landmark = runCatching { Landmark.valueOf(getString("landmark")) }.getOrDefault(Landmark.GENERIC_TOWN),
-    )
-
     private companion object {
         const val KEY_CITIES = "cities"
         const val KEY_SELECTED = "selected"
     }
 }
+
+internal fun City.toJson() = JSONObject()
+    .put("id", id).put("name", name).put("region", region)
+    .put("lat", latitude).put("lon", longitude)
+    .put("offset", utcOffsetMinutes).put("landmark", landmark.name)
+
+internal fun JSONObject.toCity() = City(
+    id = getString("id"),
+    name = getString("name"),
+    region = optString("region"),
+    latitude = getDouble("lat"),
+    longitude = getDouble("lon"),
+    utcOffsetMinutes = getInt("offset"),
+    landmark = runCatching { Landmark.valueOf(getString("landmark")) }.getOrDefault(Landmark.GENERIC_TOWN),
+)

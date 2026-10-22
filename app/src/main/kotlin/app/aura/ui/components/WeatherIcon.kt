@@ -29,35 +29,38 @@ import kotlin.math.sin
  */
 @Composable
 fun WeatherIcon(condition: Condition, isNight: Boolean = false, size: Dp = 28.dp, modifier: Modifier = Modifier) {
-    Canvas(modifier.size(size)) {
-        val s = this.size.minDimension
-        when (condition) {
-            Condition.CLEAR -> if (isNight) moon(Offset(s * 0.5f, s * 0.5f), s * 0.36f) else sun(Offset(s * 0.5f, s * 0.5f), s * 0.24f, rays = true)
-            Condition.PARTLY_CLOUDY -> {
-                if (isNight) moon(Offset(s * 0.38f, s * 0.36f), s * 0.26f) else sun(Offset(s * 0.38f, s * 0.36f), s * 0.18f, rays = true)
-                cloud(Offset(s * 0.58f, s * 0.68f), s * 0.36f, dark = false)
-            }
-            Condition.CLOUDY -> {
-                cloud(Offset(s * 0.38f, s * 0.42f), s * 0.28f, dark = true, alpha = 0.85f)
-                cloud(Offset(s * 0.55f, s * 0.62f), s * 0.4f, dark = false)
-            }
-            Condition.RAIN -> {
-                cloud(Offset(s * 0.5f, s * 0.42f), s * 0.42f, dark = true)
-                drops(s, count = 3)
-            }
-            Condition.STORM -> {
-                cloud(Offset(s * 0.5f, s * 0.4f), s * 0.42f, dark = true)
-                drops(s, count = 2)
-                bolt(s)
-            }
-            Condition.SNOW -> {
-                cloud(Offset(s * 0.5f, s * 0.42f), s * 0.42f, dark = false)
-                flakes(s)
-            }
-            Condition.FOG -> {
-                cloud(Offset(s * 0.5f, s * 0.38f), s * 0.38f, dark = false, alpha = 0.7f)
-                fog(s)
-            }
+    Canvas(modifier.size(size)) { drawWeatherIcon(condition, isNight) }
+}
+
+/** Draws the icon filling the smaller side of this scope; also used to paint widget bitmaps. */
+fun DrawScope.drawWeatherIcon(condition: Condition, isNight: Boolean) {
+    val s = size.minDimension
+    when (condition) {
+        Condition.CLEAR -> if (isNight) moon(Offset(s * 0.5f, s * 0.5f), s * 0.36f) else sun(Offset(s * 0.5f, s * 0.5f), s * 0.24f, rays = true)
+        Condition.PARTLY_CLOUDY -> {
+            if (isNight) moon(Offset(s * 0.38f, s * 0.36f), s * 0.28f) else sun(Offset(s * 0.36f, s * 0.36f), s * 0.2f, rays = true)
+            cloud(Offset(s * 0.6f, s * 0.64f), s * 0.6f, dark = false)
+        }
+        Condition.CLOUDY -> {
+            cloud(Offset(s * 0.4f, s * 0.42f), s * 0.5f, dark = true, alpha = 0.85f)
+            cloud(Offset(s * 0.56f, s * 0.6f), s * 0.68f, dark = false)
+        }
+        Condition.RAIN -> {
+            cloud(Offset(s * 0.5f, s * 0.42f), s * 0.6f, dark = true)
+            drops(s, count = 3)
+        }
+        Condition.STORM -> {
+            cloud(Offset(s * 0.5f, s * 0.4f), s * 0.6f, dark = true)
+            drops(s, count = 2)
+            bolt(s)
+        }
+        Condition.SNOW -> {
+            cloud(Offset(s * 0.5f, s * 0.42f), s * 0.6f, dark = false)
+            flakes(s)
+        }
+        Condition.FOG -> {
+            cloud(Offset(s * 0.5f, s * 0.36f), s * 0.56f, dark = false, alpha = 0.7f)
+            fog(s)
         }
     }
 }

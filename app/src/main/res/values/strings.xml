@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Aura</string>
+    <string name="widget_name">Aura · погода</string>
+    <string name="widget_description">Живая сцена, температура и осадки на ближайшие часы</string>
 </resources>
