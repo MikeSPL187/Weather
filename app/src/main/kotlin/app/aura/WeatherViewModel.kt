@@ -14,6 +14,8 @@ import app.aura.core.data.Cities
 import app.aura.core.data.OpenMeteoWeatherRepository
 import app.aura.core.data.SampleWeatherRepository
 import app.aura.core.format.Formatters
+import app.aura.core.map.RadarFrames
+import app.aura.core.map.RadarRepository
 import app.aura.core.map.RegionGrid
 import app.aura.core.map.SampleRegionGrid
 import app.aura.core.model.City
@@ -80,6 +82,8 @@ data class WeatherUiState(
     /** Weather on a grid around the city for the map tab, loaded when the tab opens. */
     val regionGrid: RegionGrid? = null,
     val mapError: String? = null,
+    /** Radar frames of the last two hours; the map still works without them. */
+    val radar: RadarFrames? = null,
 )
 
 fun localNow(city: City, instant: Instant = Instant.now()): LocalDateTime =
@@ -122,6 +126,8 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
     private val store = CityStore(application)
     private val live = OpenMeteoWeatherRepository()
     private val sample = SampleWeatherRepository()
+    private val radarRepository = RadarRepository()
+    private var radarLoadedAt = 0L
     private val cache = mutableMapOf<String, Forecast>()
     private val widgets = WidgetStore(application)
 
@@ -194,6 +200,7 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
 
     /** Loads the map grid for the current city unless a fresh one is already there. */
     fun loadMap(force: Boolean = false) {
+        loadRadar(force)
         val city = _state.value.city
         val cached = grids[city.id]
         if (!force && cached != null && System.currentTimeMillis() - cached.second < REFRESH_MS) return
@@ -221,6 +228,17 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
                     }
                 }
             }
+        }
+    }
+
+    /** Radar covers every city at once, so it is fetched once and refreshed every 10 minutes. */
+    private fun loadRadar(force: Boolean) {
+        if (!force && System.currentTimeMillis() - radarLoadedAt < RADAR_REFRESH_MS) return
+        radarLoadedAt = System.currentTimeMillis()
+        viewModelScope.launch {
+            val frames = runCatching { radarRepository.frames() }.getOrNull()?.takeIf { it.past.isNotEmpty() }
+            if (frames == null) radarLoadedAt = 0L
+            _state.update { it.copy(radar = frames ?: it.radar) }
         }
     }
 
@@ -330,5 +348,6 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
     private companion object {
         const val TICK_MS = 30_000L
         const val REFRESH_MS = 15 * 60_000L
+        const val RADAR_REFRESH_MS = 10 * 60_000L
     }
 }

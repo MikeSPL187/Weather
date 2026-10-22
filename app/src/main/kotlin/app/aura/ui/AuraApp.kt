@@ -140,7 +140,7 @@ fun AuraScaffold(
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
                 .height(140.dp)
-                .background(Brush.verticalGradient(listOf(Color.Transparent, bottom.copy(alpha = 0.92f)))),
+                .background(Brush.verticalGradient(listOf(Color.Transparent, (if (tab == Tab.MAP) Color(0xFF0A1030) else bottom).copy(alpha = 0.92f)))),
         )
         TabBar(
             selected = tab,

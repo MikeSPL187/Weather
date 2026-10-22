@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Aura map preview</title>
+<link rel="stylesheet" href="/tools/map-preview/node_modules/maplibre-gl/dist/maplibre-gl.css">
+<style>html, body, #map { margin: 0; width: 100%; height: 100%; background: #101A3C; }</style>
+</head>
+<body>
+<div id="map"></div>
+<script src="/tools/map-preview/node_modules/maplibre-gl/dist/maplibre-gl.js"></script>
+<script>
+  // The same style and overlays as app/src/main/kotlin/app/aura/ui/map/WeatherMap.kt.
+  (async () => {
+    const p = new URLSearchParams(location.search);
+    const data = '/build/map-preview/';
+    const cases = await (await fetch(data + 'cases.json')).json();
+    const c = cases[p.get('city') || 'msk'];
+    const layer = p.get('layer') || 'precipitation';
+    const style = await (await fetch(data + 'style.json')).json();
+    const map = new maplibregl.Map({
+      container: 'map', style, center: [c.lon, c.lat], zoom: +(p.get('zoom') || 7.0),
+      pitch: +(p.get('pitch') || 50), bearing: +(p.get('bearing') || -12), attributionControl: false, fadeDuration: 0,
+    });
+    map.on('load', async () => {
+      const [north, south, west, east] = c.bounds;
+      map.addSource('forecast', { type: 'image', url: data + `${p.get('city') || 'msk'}-${layer}.png`,
+        coordinates: [[west, north], [east, north], [east, south], [west, south]] });
+      map.addLayer({ id: 'forecast', type: 'raster', source: 'forecast', paint: { 'raster-opacity': 0.9, 'raster-resampling': 'linear', 'raster-fade-duration': 0 } }, 'road-label');
+      if (p.get('radar')) {
+        try {
+          const idx = await (await fetch('https://api.rainviewer.com/public/weather-maps.json')).json();
+          const f = idx.radar.past[idx.radar.past.length - 1];
+          map.addSource('radar', { type: 'raster', tiles: [`${idx.host}${f.path}/256/{z}/{x}/{y}/2/1_1.png`], tileSize: 256, maxzoom: 7 });
+          map.addLayer({ id: 'radar', type: 'raster', source: 'radar', paint: { 'raster-opacity': 0.85 } }, 'road-label');
+        } catch (e) { console.error('radar', e); }
+      }
+      map.once('idle', () => { document.title = 'ready'; });
+    });
+    map.on('error', (e) => console.error('map', e.error && e.error.message));
+  })();
+</script>
+</body>
+</html>

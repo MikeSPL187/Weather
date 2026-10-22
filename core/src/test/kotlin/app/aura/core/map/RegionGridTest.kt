@@ -57,8 +57,8 @@ class RegionGridTest {
     fun placesOutsideTheGridHaveNoPosition() {
         val big = SampleRegionGrid.generate(Cities.moscow, now, overhead = false)
         val (col, row) = big.position(Cities.moscow.latitude, Cities.moscow.longitude)!!
-        assertEquals(3f, col, 0.01f)
-        assertEquals(3f, row, 0.01f)
+        assertEquals((big.size - 1) / 2f, col, 0.01f)
+        assertEquals((big.size - 1) / 2f, row, 0.01f)
         assertNull(big.position(Cities.petersburg.latitude, Cities.petersburg.longitude))
     }
 

@@ -73,6 +73,36 @@ class RegionGrid(
         return top + (bottom - top) * tr
     }
 
+    /** Like [sample], but with Catmull-Rom curves between points, so overlays have no creases. */
+    fun sampleSmooth(frames: List<DoubleArray>, hour: Float, col: Float, row: Float): Double {
+        val h0 = floor(hour).toInt().coerceIn(0, times.lastIndex)
+        val h1 = (h0 + 1).coerceAtMost(times.lastIndex)
+        val th = (hour - h0).coerceIn(0f, 1f)
+        val a = cubic(frames[h0], col, row)
+        val b = cubic(frames[h1], col, row)
+        return a + (b - a) * th
+    }
+
+    private fun cubic(values: DoubleArray, col: Float, row: Float): Double {
+        val c = col.coerceIn(0f, (size - 1).toFloat())
+        val r = row.coerceIn(0f, (size - 1).toFloat())
+        val c1 = floor(c).toInt().coerceAtMost(size - 2)
+        val r1 = floor(r).toInt().coerceAtMost(size - 2)
+        val tc = (c - c1).toDouble()
+        val tr = (r - r1).toDouble()
+        fun v(rr: Int, cc: Int) = values[rr.coerceIn(0, size - 1) * size + cc.coerceIn(0, size - 1)]
+        fun spline(p0: Double, p1: Double, p2: Double, p3: Double, t: Double) =
+            p1 + 0.5 * t * (p2 - p0 + t * (2 * p0 - 5 * p1 + 4 * p2 - p3 + t * (3 * (p1 - p2) + p3 - p0)))
+        val rows = DoubleArray(4) { k -> val rr = r1 - 1 + k; spline(v(rr, c1 - 1), v(rr, c1), v(rr, c1 + 1), v(rr, c1 + 2), tc) }
+        return spline(rows[0], rows[1], rows[2], rows[3], tr)
+    }
+
+    /** North, south, west and east edges of the grid in degrees: where the overlay image is pinned. */
+    fun bounds(): DoubleArray {
+        val pts = points(center, size, stepKm)
+        return doubleArrayOf(pts.first().first, pts.last().first, pts.first().second, pts.last().second)
+    }
+
     /** Grid position of a place, or null when it lies outside the grid. */
     fun position(latitude: Double, longitude: Double): Pair<Float, Float>? {
         val mid = (size - 1) / 2.0

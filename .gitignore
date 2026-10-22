@@ -7,3 +7,4 @@ local.properties
 captures/
 .kotlin/
 tools/scene-preview/node_modules
+tools/map-preview/node_modules

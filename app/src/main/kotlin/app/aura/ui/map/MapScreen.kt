@@ -17,12 +17,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
@@ -39,6 +37,7 @@ import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -52,10 +51,11 @@ import androidx.compose.ui.unit.dp
 import app.aura.WeatherUiState
 import app.aura.core.format.Formatters
 import app.aura.core.map.MapLayer
+import app.aura.core.map.MapPalette
+import app.aura.core.map.MapTimeline
 import app.aura.core.map.PrecipitationRadar
 import app.aura.core.map.RegionGrid
 import app.aura.core.model.DataSource
-import app.aura.ui.components.GlassCard
 import app.aura.ui.now.ErrorBanner
 import app.aura.ui.theme.AuraColors
 import app.aura.ui.theme.AuraType
@@ -69,19 +69,25 @@ private val MapLayer.label: String
         MapLayer.WIND -> "Ветер"
     }
 
-/** One sentence about the city at the chosen hour for the chosen layer. */
-private fun summary(grid: RegionGrid, layer: MapLayer, hour: Float): String {
+private val Panel = Color(0xE60A1030)
+
+/** One sentence about the city at the chosen moment for the chosen layer. */
+private fun summary(grid: RegionGrid, timeline: MapTimeline, layer: MapLayer, position: Float): String {
+    val hour = timeline.moment(position).forecastHour
+    val step = timeline.forecastStep(position)
     val mid = (grid.size - 1) / 2f
     fun here(frames: List<DoubleArray>) = grid.sample(frames, hour, mid, mid)
     return when (layer) {
-        MapLayer.PRECIPITATION -> PrecipitationRadar.describe(grid, hour.roundToInt())
+        MapLayer.PRECIPITATION ->
+            if (timeline.isRadar(position)) "Радар: что выпало на самом деле. Дальше — прогноз на 12 часов"
+            else PrecipitationRadar.describe(grid, step)
         MapLayer.CLOUDS -> "Облачность над вами ${here(grid.cloudCoverPercent).roundToInt()} %"
         MapLayer.TEMPERATURE -> {
-            val frame = grid.temperatureC[hour.roundToInt().coerceIn(0, grid.times.lastIndex)]
-            "У вас ${Formatters.temperature(here(grid.temperatureC))}, в округе от ${Formatters.temperature(frame.min())} до ${Formatters.temperature(frame.max())}"
+            val frame = grid.temperatureC[step]
+            "У вас ${Formatters.temperature(here(grid.temperatureC))}, вокруг от ${Formatters.temperature(frame.min())} до ${Formatters.temperature(frame.max())}"
         }
         MapLayer.WIND -> {
-            val direction = grid.windDirectionDeg[hour.roundToInt().coerceIn(0, grid.times.lastIndex)][grid.size * grid.size / 2]
+            val direction = grid.windDirectionDeg[step][grid.size * grid.size / 2]
             "Ветер у вас ${here(grid.windSpeedMs).roundToInt()} м/с, ${Formatters.windName(direction.roundToInt())}"
         }
     }
@@ -90,72 +96,127 @@ private fun summary(grid: RegionGrid, layer: MapLayer, hour: Float): String {
 @Composable
 fun MapScreen(state: WeatherUiState, onRetry: () -> Unit, contentPadding: PaddingValues, initialLayer: MapLayer = MapLayer.PRECIPITATION) {
     var layer by rememberSaveable { mutableStateOf(initialLayer) }
+    var view by rememberSaveable { mutableStateOf(MapView3d.REGION) }
     val grid = state.regionGrid
-    var hour by remember(grid) { mutableFloatStateOf(0f) }
-    var playing by remember(grid) { mutableStateOf(false) }
-    if (playing && grid != null) {
-        LaunchedEffect(grid) {
+    val radar = state.radar?.takeIf { layer == MapLayer.PRECIPITATION }
+    val timeline = remember(grid, radar, state.city.id) {
+        grid?.let { MapTimeline(radar?.past.orEmpty(), it.times, state.city.utcOffsetMinutes) }
+    }
+    var position by remember(timeline) { mutableFloatStateOf(timeline?.now?.toFloat() ?: 0f) }
+    var playing by remember(timeline) { mutableStateOf(false) }
+    if (playing && timeline != null) {
+        LaunchedEffect(timeline) {
             var last = withFrameNanos { it }
             while (true) withFrameNanos { now ->
-                // Two hours of forecast per second, then back to now.
-                hour += (now - last) / 1_000_000_000f * 2f
-                if (hour > grid.times.lastIndex) hour = 0f
+                // About a frame and a half per second, then back to the start.
+                position += (now - last) / 1_000_000_000f * 1.5f
+                if (position > timeline.last) position = 0f
                 last = now
             }
         }
     }
+    val temperature = state.forecast?.current?.temperatureC
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .statusBarsPadding()
-            .padding(contentPadding)
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Row(Modifier.padding(top = 12.dp, start = 4.dp), verticalAlignment = Alignment.Bottom) {
-            Text("Карта", style = AuraType.Title, color = AuraColors.TextPrimary)
-            Spacer(Modifier.weight(1f))
-            Text(
-                "${state.city.name} · ${grid?.radiusKm?.roundToInt() ?: 120} км вокруг",
-                style = AuraType.Caption,
-                color = AuraColors.TextSecondary,
-                modifier = Modifier.padding(bottom = 4.dp),
-            )
+    Box(Modifier.fillMaxSize()) {
+        WeatherMap(
+            city = state.city,
+            grid = grid,
+            radar = radar,
+            timeline = timeline,
+            layer = layer,
+            position = position,
+            view = view,
+            hereLabel = state.city.name + (temperature?.let { " · " + Formatters.temperature(it) } ?: ""),
+            modifier = Modifier.fillMaxSize(),
+        )
+
+        // Top: title and layers over a scrim so they read on any part of the map.
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .background(Brush.verticalGradient(listOf(Color(0xF00A1030), Color(0x990A1030), Color.Transparent)))
+                .statusBarsPadding()
+                .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Row(verticalAlignment = Alignment.Bottom) {
+                Text("Карта", style = AuraType.Title, color = AuraColors.TextPrimary)
+                Spacer(Modifier.weight(1f))
+                Text(
+                    "${state.city.name} · ${grid?.radiusKm?.roundToInt() ?: 125} км вокруг",
+                    style = AuraType.Caption,
+                    color = AuraColors.TextSecondary,
+                    modifier = Modifier.padding(bottom = 4.dp),
+                )
+            }
+            LayerPicker(layer, onPick = { layer = it })
+            state.mapError?.let { ErrorBanner(it, onRetry) }
         }
 
-        LayerPicker(layer, onPick = { layer = it })
-
-        state.mapError?.let { ErrorBanner(it, onRetry) }
-
-        Box(Modifier.fillMaxWidth().height(350.dp), contentAlignment = Alignment.Center) {
-            if (grid == null) {
-                Text("Загружаем карту…", style = AuraType.Body, color = AuraColors.TextSecondary)
-            } else {
-                val temperature = state.forecast?.current?.temperatureC ?: grid.sample(grid.temperatureC, 0f, (grid.size - 1) / 2f, (grid.size - 1) / 2f)
-                RegionMap(
-                    grid = grid,
-                    layer = layer,
-                    hour = hour,
-                    hereLabel = "Вы здесь · ${Formatters.temperature(temperature)}",
-                    description = "Карта: ${layer.label.lowercase()}. ${summary(grid, layer, hour)}. Проведите в сторону, чтобы повернуть",
-                    modifier = Modifier.fillMaxSize(),
-                )
+        // Right: back to the region, or down into the city in 3D.
+        Column(
+            Modifier
+                .align(Alignment.CenterEnd)
+                .padding(end = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            MapButton(if (view == MapView3d.CITY) "Регион" else "3D", if (view == MapView3d.CITY) "Показать весь регион" else "Показать город в 3D") {
+                view = if (view == MapView3d.CITY) MapView3d.REGION else MapView3d.CITY
             }
         }
 
-        if (grid != null) {
-            Legend(layer)
-            TimeCard(grid, layer, hour, playing, onHour = { playing = false; hour = it }, onPlay = { playing = !playing })
+        // Bottom: the timeline, the legend and what it means for the city.
+        if (grid != null && timeline != null) {
+            Column(
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(contentPadding)
+                    .padding(horizontal = 12.dp)
+                    .clip(RoundedCornerShape(26.dp))
+                    .background(Panel)
+                    .border(1.dp, AuraColors.GlassStroke, RoundedCornerShape(26.dp))
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
+            ) {
+                TimeControls(grid, timeline, layer, position, playing, onPosition = { playing = false; position = it }, onPlay = { playing = !playing })
+                Spacer(Modifier.height(10.dp))
+                Legend(layer)
+                Text(
+                    sourceNote(state, layer),
+                    style = AuraType.Caption.copy(fontSize = AuraType.Caption.fontSize * 0.9f),
+                    color = AuraColors.TextSecondary.copy(alpha = 0.7f),
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+            }
+        } else if (grid == null) {
             Text(
-                if (grid.source == DataSource.SAMPLE) "Пример данных: нет связи с сервером прогноза."
-                else "Прогноз модели Open-Meteo (CC BY 4.0) по сетке ${grid.size}×${grid.size} с шагом ${grid.stepKm.roundToInt()} км. Это не радар: мелкие ливни карта может не показать.",
-                style = AuraType.Caption,
+                "Загружаем карту…",
+                style = AuraType.Body,
                 color = AuraColors.TextSecondary,
-                modifier = Modifier.padding(horizontal = 4.dp),
+                modifier = Modifier.align(Alignment.Center),
             )
         }
+    }
+}
+
+private fun sourceNote(state: WeatherUiState, layer: MapLayer): String = when {
+    state.regionGrid?.source == DataSource.SAMPLE -> "Пример данных: нет связи с сервером прогноза."
+    layer == MapLayer.PRECIPITATION && state.radar != null -> "Радар RainViewer · прогноз Open-Meteo · карта © OpenStreetMap"
+    else -> "Прогноз Open-Meteo по сетке 25 км · карта © OpenStreetMap"
+}
+
+@Composable
+private fun MapButton(text: String, description: String, onClick: () -> Unit) {
+    Box(
+        Modifier
+            .size(52.dp)
+            .clip(CircleShape)
+            .background(Panel)
+            .border(1.dp, AuraColors.GlassStroke, CircleShape)
+            .selectable(selected = false, role = Role.Button, onClick = onClick)
+            .semantics { contentDescription = description },
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(text, style = AuraType.CardTitle, color = AuraColors.TextPrimary)
     }
 }
 
@@ -165,7 +226,7 @@ private fun LayerPicker(selected: MapLayer, onPick: (MapLayer) -> Unit) {
         Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(22.dp))
-            .background(AuraColors.GlassFill)
+            .background(Panel)
             .border(1.dp, AuraColors.GlassStroke, RoundedCornerShape(22.dp))
             .padding(4.dp)
             .selectableGroup(),
@@ -190,16 +251,16 @@ private fun LayerPicker(selected: MapLayer, onPick: (MapLayer) -> Unit) {
 
 @Composable
 private fun Legend(layer: MapLayer) {
-    val (stops, labels) = when (layer) {
-        MapLayer.PRECIPITATION -> PrecipitationStops to listOf("Слабые", "1 мм/ч", "Ливень")
-        MapLayer.CLOUDS -> CloudStops.drop(1) to listOf("Ясно", "50 %", "Сплошная")
-        MapLayer.TEMPERATURE -> TemperatureStops to listOf("−25°", "0°", "+30°")
-        MapLayer.WIND -> WindStops to listOf("Штиль", "10 м/с", "Шторм")
+    val labels = when (layer) {
+        MapLayer.PRECIPITATION -> listOf("Слабые", "Умеренные", "Ливень")
+        MapLayer.CLOUDS -> listOf("Ясно", "50 %", "Сплошная")
+        MapLayer.TEMPERATURE -> listOf("−25°", "0°", "+30°")
+        MapLayer.WIND -> listOf("Штиль", "10 м/с", "Шторм")
     }
-    Column(Modifier.padding(horizontal = 4.dp).semantics(mergeDescendants = true) {}) {
-        Canvas(Modifier.fillMaxWidth().height(8.dp)) {
-            val colors = stops.map { it.second.copy(alpha = 1f) }
-            drawRoundRect(Brush.horizontalGradient(colors), cornerRadius = androidx.compose.ui.geometry.CornerRadius(size.height / 2))
+    val colors = MapPalette.stops(layer).drop(if (layer == MapLayer.WIND || layer == MapLayer.PRECIPITATION) 1 else 0).map { Color(it.second.toInt()).copy(alpha = 1f) }
+    Column(Modifier.semantics(mergeDescendants = true) {}) {
+        Canvas(Modifier.fillMaxWidth().height(6.dp)) {
+            drawRoundRect(Brush.horizontalGradient(colors), cornerRadius = CornerRadius(size.height / 2))
         }
         Row(Modifier.fillMaxWidth().padding(top = 4.dp)) {
             labels.forEachIndexed { i, text ->
@@ -220,53 +281,85 @@ private fun Legend(layer: MapLayer) {
 }
 
 @Composable
-private fun TimeCard(grid: RegionGrid, layer: MapLayer, hour: Float, playing: Boolean, onHour: (Float) -> Unit, onPlay: () -> Unit) {
-    val step = hour.roundToInt().coerceIn(0, grid.times.lastIndex)
-    val time = Formatters.time(grid.times[step].toLocalTime())
-    GlassCard(Modifier.fillMaxWidth()) {
-        Column {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(
-                    onClick = onPlay,
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(AuraColors.Sun)
-                        .semantics { contentDescription = if (playing) "Пауза" else "Показать следующие часы" },
-                ) {
-                    PlayPauseGlyph(playing)
+private fun TimeControls(
+    grid: RegionGrid,
+    timeline: MapTimeline,
+    layer: MapLayer,
+    position: Float,
+    playing: Boolean,
+    onPosition: (Float) -> Unit,
+    onPlay: () -> Unit,
+) {
+    Column {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            IconButton(
+                onClick = onPlay,
+                modifier = Modifier
+                    .size(46.dp)
+                    .clip(CircleShape)
+                    .background(AuraColors.Sun)
+                    .semantics { contentDescription = if (playing) "Пауза" else "Проиграть" },
+            ) {
+                PlayPauseGlyph(playing)
+            }
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(timeline.label(position), style = AuraType.CardTitle, color = AuraColors.TextPrimary)
+                    if (timeline.isRadar(position)) {
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            "РАДАР",
+                            style = AuraType.Label,
+                            color = AuraColors.Ink,
+                            modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(AuraColors.Ice).padding(horizontal = 6.dp, vertical = 1.dp),
+                        )
+                    }
                 }
-                Spacer(Modifier.width(12.dp))
-                Column(Modifier.weight(1f)) {
-                    Text(if (step == 0) "Сейчас · $time" else "Через $step ч · $time", style = AuraType.CardTitle, color = AuraColors.TextPrimary)
-                    Text(summary(grid, layer, hour), style = AuraType.Body, color = AuraColors.TextSecondary)
+                Text(summary(grid, timeline, layer, position), style = AuraType.Body, color = AuraColors.TextSecondary, maxLines = 2)
+            }
+        }
+        Box(Modifier.fillMaxWidth().padding(top = 6.dp)) {
+            // The observed part of the timeline is tinted, so radar and forecast read apart.
+            if (timeline.now > 0) {
+                Canvas(Modifier.fillMaxWidth().height(48.dp)) {
+                    val inset = 10.dp.toPx()
+                    val w = size.width - inset * 2
+                    val x = inset + w * timeline.now / timeline.last.coerceAtLeast(1)
+                    drawRoundRect(AuraColors.Ice.copy(alpha = 0.35f), topLeft = Offset(inset, size.height / 2 - 3.dp.toPx()), size = Size(x - inset, 6.dp.toPx()), cornerRadius = CornerRadius(3.dp.toPx()))
+                    drawLine(Color.White.copy(alpha = 0.8f), Offset(x, size.height / 2 - 9.dp.toPx()), Offset(x, size.height / 2 + 9.dp.toPx()), strokeWidth = 2.dp.toPx())
                 }
             }
             Slider(
-                value = hour,
-                onValueChange = onHour,
-                valueRange = 0f..grid.times.lastIndex.toFloat(),
+                value = position,
+                onValueChange = onPosition,
+                valueRange = 0f..timeline.last.toFloat(),
                 colors = SliderDefaults.colors(
                     thumbColor = Color.White,
-                    activeTrackColor = AuraColors.Sun,
-                    inactiveTrackColor = Color.White.copy(alpha = 0.2f),
+                    activeTrackColor = AuraColors.Sun.copy(alpha = 0.85f),
+                    inactiveTrackColor = Color.White.copy(alpha = 0.16f),
                 ),
-                modifier = Modifier.padding(top = 4.dp).semantics { contentDescription = "Время прогноза" },
+                modifier = Modifier.semantics { contentDescription = "Время на карте" },
             )
-            Row(Modifier.fillMaxWidth()) {
-                listOf(0, grid.times.lastIndex / 2, grid.times.lastIndex).forEachIndexed { i, index ->
-                    Text(
-                        if (index == 0) "Сейчас" else Formatters.time(grid.times[index].toLocalTime()),
-                        style = AuraType.Caption,
-                        color = AuraColors.TextSecondary,
-                        modifier = Modifier.weight(1f),
-                        textAlign = when (i) {
-                            0 -> TextAlign.Start
-                            2 -> TextAlign.End
-                            else -> TextAlign.Center
-                        },
-                    )
-                }
+        }
+        Row(Modifier.fillMaxWidth()) {
+            val marks = buildList {
+                if (timeline.now > 0) add(0 to "−2 ч")
+                add(timeline.now to "Сейчас")
+                add(timeline.last to "+${timeline.last - timeline.now} ч")
+            }
+            marks.forEachIndexed { i, (_, text) ->
+                Text(
+                    text,
+                    style = AuraType.Caption,
+                    color = AuraColors.TextSecondary,
+                    modifier = Modifier.weight(1f),
+                    textAlign = when (i) {
+                        0 -> TextAlign.Start
+                        marks.lastIndex -> TextAlign.End
+                        else -> TextAlign.Center
+                    },
+                )
             }
         }
     }
@@ -290,3 +383,4 @@ private fun PlayPauseGlyph(playing: Boolean) {
         }
     }
 }
+

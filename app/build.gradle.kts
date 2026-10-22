@@ -15,6 +15,8 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "0.1.0"
+        // Phones and the x86-64 emulator; the map's native library is large per ABI.
+        ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64") }
     }
 
     buildTypes {
@@ -54,6 +56,7 @@ dependencies {
 
     implementation(libs.glance.appwidget)
     implementation(libs.androidx.work.runtime)
+    implementation(libs.maplibre.android)
     debugImplementation(libs.compose.ui.tooling)
 
     testImplementation(libs.junit)

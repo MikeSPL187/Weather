@@ -45,9 +45,9 @@ fun conditionForWmo(code: Int): Condition = when (code) {
 private const val HPA_TO_MMHG = 0.750062
 private const val NOWCAST_STEPS = 8 // 2 hours of 15-minute steps
 
-/** The map covers about 120 km around the city: 7×7 points, 40 km apart, 12 hours ahead. */
-const val GRID_SIZE = 7
-const val GRID_STEP_KM = 40.0
+/** The map covers 125 km around the city: 11×11 points, 25 km apart, 12 hours ahead. */
+const val GRID_SIZE = 11
+const val GRID_STEP_KM = 25.0
 const val GRID_HOURS = 12
 
 object OpenMeteoUrls {

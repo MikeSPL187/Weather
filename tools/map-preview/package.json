@@ -1,0 +1,13 @@
+{
+  "name": "aura-map-preview",
+  "private": true,
+  "type": "module",
+  "description": "Renders the map style and weather overlays in headless Chromium for review",
+  "scripts": {
+    "render": "node render.mjs"
+  },
+  "dependencies": {
+    "maplibre-gl": "4.7.1",
+    "playwright-core": "1.56.1"
+  }
+}
