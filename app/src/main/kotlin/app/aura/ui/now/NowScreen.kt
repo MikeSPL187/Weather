@@ -211,7 +211,7 @@ fun NowScreen(
 }
 
 @Composable
-private fun ErrorBanner(message: String, onRetry: () -> Unit, modifier: Modifier = Modifier) {
+internal fun ErrorBanner(message: String, onRetry: () -> Unit, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .fillMaxWidth()

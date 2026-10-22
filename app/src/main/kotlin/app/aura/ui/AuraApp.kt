@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -36,6 +37,7 @@ import app.aura.ui.cities.CitiesScreen
 import app.aura.ui.components.Tab
 import app.aura.ui.components.TabBar
 import app.aura.ui.forecast.ForecastScreen
+import app.aura.ui.map.MapScreen
 import app.aura.ui.now.NowScreen
 import app.aura.ui.scene.skyColors
 import app.aura.ui.tips.TipsScreen
@@ -46,6 +48,9 @@ fun AuraApp(viewModel: WeatherViewModel = viewModel()) {
     var tab by rememberSaveable { mutableStateOf(Tab.NOW) }
     var showCities by rememberSaveable { mutableStateOf(false) }
     val haptics = LocalHapticFeedback.current
+    LaunchedEffect(tab, state.city.id) {
+        if (tab == Tab.MAP) viewModel.loadMap()
+    }
 
     if (showCities) {
         BackHandler { showCities = false }
@@ -81,6 +86,7 @@ fun AuraApp(viewModel: WeatherViewModel = viewModel()) {
         onEndPreview = viewModel::endPreview,
         onRetry = viewModel::retry,
         onRefresh = viewModel::refresh,
+        onMapRetry = { viewModel.loadMap(force = true) },
     )
 }
 
@@ -95,6 +101,7 @@ fun AuraScaffold(
     onEndPreview: () -> Unit = {},
     onRetry: () -> Unit = {},
     onRefresh: () -> Unit = {},
+    onMapRetry: () -> Unit = {},
 ) {
     // The sky fades between cities, times of day and weather instead of jumping.
     val (skyTop, skyBottom) = state.scene?.let(::skyColors) ?: (Color(0xFF0A1030) to Color(0xFF15205A))
@@ -123,11 +130,7 @@ fun AuraScaffold(
                     contentPadding = barPadding,
                 )
                 Tab.FORECAST -> ForecastScreen(state, barPadding)
-                Tab.MAP -> ComingSoonScreen(
-                    title = "Карта",
-                    description = "3D-карта осадков с шагом времени готова в макетах и появится после подключения радарных данных.",
-                    contentPadding = barPadding,
-                )
+                Tab.MAP -> MapScreen(state, onRetry = onMapRetry, contentPadding = barPadding)
                 Tab.TIPS -> TipsScreen(state, barPadding)
             }
         }

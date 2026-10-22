@@ -14,6 +14,8 @@ import app.aura.core.data.Cities
 import app.aura.core.data.OpenMeteoWeatherRepository
 import app.aura.core.data.SampleWeatherRepository
 import app.aura.core.format.Formatters
+import app.aura.core.map.RegionGrid
+import app.aura.core.map.SampleRegionGrid
 import app.aura.core.model.City
 import app.aura.core.model.Condition
 import app.aura.core.model.Forecast
@@ -75,6 +77,9 @@ data class WeatherUiState(
     val searchQuery: String = "",
     val searchResults: List<City> = emptyList(),
     val searching: Boolean = false,
+    /** Weather on a grid around the city for the map tab, loaded when the tab opens. */
+    val regionGrid: RegionGrid? = null,
+    val mapError: String? = null,
 )
 
 fun localNow(city: City, instant: Instant = Instant.now()): LocalDateTime =
@@ -125,6 +130,8 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
 
     private var loadJob: Job? = null
     private var searchJob: Job? = null
+    private var mapJob: Job? = null
+    private val grids = mutableMapOf<String, Pair<RegionGrid, Long>>()
 
     init {
         val cities = store.load()
@@ -145,9 +152,11 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
         store.selectedId = city.id
         _state.update { current ->
             val cached = cache[city.id]
-            if (cached != null) buildUiState(cached, localNow(cached.city), null, current.copy(error = null))
-            else current.copy(city = city, forecast = null, scene = null, loading = true, error = null, preview = null)
+            val grid = grids[city.id]?.first
+            if (cached != null) buildUiState(cached, localNow(cached.city), null, current.copy(error = null, regionGrid = grid, mapError = null))
+            else current.copy(city = city, forecast = null, scene = null, loading = true, error = null, preview = null, regionGrid = grid, mapError = null)
         }
+        mapJob?.cancel()
         loadJob?.cancel()
         loadJob = viewModelScope.launch {
             while (isActive) {
@@ -180,6 +189,38 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
     fun endPreview() {
         _state.update { current ->
             current.copy(preview = null, scene = current.forecast?.let { f -> current.scene?.copy(condition = f.current.condition) })
+        }
+    }
+
+    /** Loads the map grid for the current city unless a fresh one is already there. */
+    fun loadMap(force: Boolean = false) {
+        val city = _state.value.city
+        val cached = grids[city.id]
+        if (!force && cached != null && System.currentTimeMillis() - cached.second < REFRESH_MS) return
+        if (mapJob?.isActive == true) return
+        mapJob = viewModelScope.launch {
+            val grid = try {
+                live.regionGrid(city)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                null
+            }
+            if (grid != null) grids[city.id] = grid to System.currentTimeMillis()
+            _state.update { current ->
+                if (current.city.id != city.id) return@update current
+                when {
+                    grid != null -> current.copy(regionGrid = grid, mapError = null)
+                    current.regionGrid != null -> current.copy(mapError = "Нет связи. Карта может быть устаревшей.")
+                    else -> {
+                        val wet = current.forecast?.nowcast?.let { NowcastSummarizer.summarize(it).isRainingNow } ?: false
+                        current.copy(
+                            regionGrid = SampleRegionGrid.generate(city, localNow(city), overhead = wet),
+                            mapError = "Нет связи с сервером прогноза. Показан пример карты.",
+                        )
+                    }
+                }
+            }
         }
     }
 

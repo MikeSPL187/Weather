@@ -44,4 +44,10 @@ object Formatters {
         val names = listOf("С", "СВ", "В", "ЮВ", "Ю", "ЮЗ", "З", "СЗ")
         return names[(((degrees % 360) + 360) % 360 + 22) / 45 % 8]
     }
+
+    /** The wind's name by where it blows from: "западный", "юго-восточный". */
+    fun windName(degrees: Int): String {
+        val names = listOf("северный", "северо-восточный", "восточный", "юго-восточный", "южный", "юго-западный", "западный", "северо-западный")
+        return names[(((degrees % 360) + 360) % 360 + 22) / 45 % 8]
+    }
 }

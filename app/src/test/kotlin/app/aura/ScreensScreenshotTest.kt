@@ -2,12 +2,23 @@ package app.aura
 
 import app.aura.core.data.Cities
 import app.aura.core.data.SampleWeatherRepository
+import app.aura.core.map.MapLayer
+import app.aura.core.map.RegionGrid
+import app.aura.core.map.SampleRegionGrid
 import app.aura.core.model.City
 import app.aura.core.model.Condition
 import app.aura.core.model.DataSource
 import app.aura.core.model.Landmark
 import app.aura.ui.AuraScaffold
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import app.aura.ui.cities.CitiesScreen
+import app.aura.ui.map.MapScreen
+import app.aura.ui.scene.skyBrush
 import app.aura.ui.components.Tab
 import app.aura.ui.theme.AuraTheme
 import app.cash.paparazzi.DeviceConfig
@@ -97,4 +108,34 @@ class ScreensScreenshotTest {
             AuraTheme { CitiesScreen(base, onSelect = {}, onAdd = {}, onRemove = {}, onQueryChange = {}, onBack = {}) }
         }
     }
+
+    /** The sample front shown as live data, so the map looks as it does with a connection. */
+    private fun mapState(city: City, time: LocalDateTime, overhead: Boolean): WeatherUiState {
+        val g = SampleRegionGrid.generate(city, time, overhead)
+        val grid = RegionGrid(g.center, g.size, g.stepKm, g.times, g.precipitationMmH, g.cloudCoverPercent, g.temperatureC, g.windSpeedMs, g.windDirectionDeg, DataSource.LIVE)
+        return state(city, time, if (overhead) Condition.RAIN else Condition.CLOUDY).copy(regionGrid = grid)
+    }
+
+    private fun map(state: WeatherUiState, layer: MapLayer) = paparazzi.snapshot {
+        AuraTheme {
+            Box(Modifier.fillMaxSize().background(skyBrush(state.scene))) {
+                MapScreen(state, onRetry = {}, contentPadding = PaddingValues(bottom = 24.dp), initialLayer = layer)
+            }
+        }
+    }
+
+    @Test
+    fun mapPrecipitationApproaching() = screen(mapState(Cities.moscow, afternoon, overhead = false), Tab.MAP)
+
+    @Test
+    fun mapPrecipitationOverhead() = map(mapState(Cities.petersburg, LocalDateTime.of(2026, 10, 22, 13, 5), overhead = true), MapLayer.PRECIPITATION)
+
+    @Test
+    fun mapClouds() = map(mapState(Cities.kazan, afternoon, overhead = false), MapLayer.CLOUDS)
+
+    @Test
+    fun mapTemperature() = map(mapState(Cities.moscow, afternoon, overhead = false), MapLayer.TEMPERATURE)
+
+    @Test
+    fun mapWind() = map(mapState(Cities.almaty, afternoon, overhead = false), MapLayer.WIND)
 }

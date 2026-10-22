@@ -1,5 +1,6 @@
 package app.aura.core.data
 
+import app.aura.core.map.RegionGrid
 import app.aura.core.model.City
 import app.aura.core.model.Condition
 import app.aura.core.model.CurrentWeather
@@ -44,6 +45,11 @@ fun conditionForWmo(code: Int): Condition = when (code) {
 private const val HPA_TO_MMHG = 0.750062
 private const val NOWCAST_STEPS = 8 // 2 hours of 15-minute steps
 
+/** The map covers about 120 km around the city: 7×7 points, 40 km apart, 12 hours ahead. */
+const val GRID_SIZE = 7
+const val GRID_STEP_KM = 40.0
+const val GRID_HOURS = 12
+
 object OpenMeteoUrls {
     private const val CURRENT = "temperature_2m,apparent_temperature,relative_humidity_2m,weather_code," +
         "wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure,is_day"
@@ -55,6 +61,14 @@ object OpenMeteoUrls {
     fun forecast(lat: Double, lon: Double) =
         "https://api.open-meteo.com/v1/forecast?latitude=$lat&longitude=$lon&current=$CURRENT&hourly=$HOURLY" +
             "&daily=$DAILY&minutely_15=precipitation&wind_speed_unit=ms&timezone=auto&forecast_days=10"
+
+    private const val GRID_HOURLY = "precipitation,cloud_cover,temperature_2m,wind_speed_10m,wind_direction_10m"
+
+    /** One request for every point of the map grid; the response is an array in the same order. */
+    fun grid(points: List<Pair<Double, Double>>, hours: Int) =
+        "https://api.open-meteo.com/v1/forecast?latitude=${points.joinToString(",") { it.first.toString() }}" +
+            "&longitude=${points.joinToString(",") { it.second.toString() }}&hourly=$GRID_HOURLY" +
+            "&wind_speed_unit=ms&timezone=auto&forecast_hours=$hours"
 
     fun airQuality(lat: Double, lon: Double) =
         "https://air-quality-api.open-meteo.com/v1/air-quality?latitude=$lat&longitude=$lon&current=european_aqi"
@@ -161,6 +175,33 @@ object OpenMeteoParser {
         return Nowcast(now.toLocalTime().withMinute(0), 60, steps, chance, kind)
     }
 
+    /** Parses a multi-point response for [RegionGrid.points] into hour-by-hour frames. */
+    fun parseGrid(body: String, center: City, size: Int, stepKm: Double): RegionGrid {
+        val locations = when (val root = json.parseToJsonElement(body)) {
+            is JsonArray -> root.map { it.jsonObject }
+            is JsonObject -> listOf(root)
+            else -> error("Unexpected grid response")
+        }
+        require(locations.size == size * size) { "Expected ${size * size} points, got ${locations.size}" }
+        val hourlies = locations.map { it.obj("hourly") ?: error("Grid point has no hourly block") }
+        val times = hourlies.first().arr("time").map { LocalDateTime.parse(it.str()) }
+        fun frames(key: String, fallback: Double) = times.indices.map { hour ->
+            DoubleArray(size * size) { point -> hourlies[point].arr(key).num(hour) ?: fallback }
+        }
+        return RegionGrid(
+            center = center,
+            size = size,
+            stepKm = stepKm,
+            times = times,
+            precipitationMmH = frames("precipitation", 0.0),
+            cloudCoverPercent = frames("cloud_cover", 0.0),
+            temperatureC = frames("temperature_2m", 0.0),
+            windSpeedMs = frames("wind_speed_10m", 0.0),
+            windDirectionDeg = frames("wind_direction_10m", 0.0),
+            source = DataSource.LIVE,
+        )
+    }
+
     fun parseAirQuality(body: String): Int? =
         json.parseToJsonElement(body).jsonObject.obj("current")?.get("european_aqi").num()?.roundToInt()
 
@@ -195,6 +236,10 @@ class OpenMeteoWeatherRepository(private val http: HttpFetcher = UrlConnectionFe
         val body = http.get(OpenMeteoUrls.forecast(city.latitude, city.longitude))
         OpenMeteoParser.parse(body, city, aqi.await())
     }
+
+    /** Weather on a [size]×[size] grid [stepKm] apart around [city], for the next [hours] hours. */
+    suspend fun regionGrid(city: City, size: Int = GRID_SIZE, stepKm: Double = GRID_STEP_KM, hours: Int = GRID_HOURS): RegionGrid =
+        OpenMeteoParser.parseGrid(http.get(OpenMeteoUrls.grid(RegionGrid.points(city, size, stepKm), hours)), city, size, stepKm)
 
     suspend fun search(query: String): List<City> =
         if (query.trim().length < 2) emptyList() else OpenMeteoParser.parseSearch(http.get(OpenMeteoUrls.search(query)))

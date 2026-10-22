@@ -1,0 +1,19 @@
+[
+  {"latitude": 55.9, "longitude": 37.3, "utc_offset_seconds": 10800, "timezone": "Europe/Moscow",
+   "hourly_units": {"time": "iso8601", "precipitation": "mm", "cloud_cover": "%", "temperature_2m": "°C", "wind_speed_10m": "m/s", "wind_direction_10m": "°"},
+   "hourly": {"time": ["2026-10-22T14:00", "2026-10-22T15:00", "2026-10-22T16:00"],
+     "precipitation": [0.0, 0.4, 1.2], "cloud_cover": [40, 80, 100], "temperature_2m": [9.0, 8.5, 8.0],
+     "wind_speed_10m": [4.0, 5.0, 6.0], "wind_direction_10m": [250, 255, 260]}},
+  {"latitude": 55.9, "longitude": 38.0, "utc_offset_seconds": 10800, "timezone": "Europe/Moscow",
+   "hourly": {"time": ["2026-10-22T14:00", "2026-10-22T15:00", "2026-10-22T16:00"],
+     "precipitation": [0.0, 0.0, 0.2], "cloud_cover": [20, 50, 90], "temperature_2m": [10.0, 9.5, 9.0],
+     "wind_speed_10m": [3.0, 4.0, 5.0], "wind_direction_10m": [240, 245, 250]}},
+  {"latitude": 55.5, "longitude": 37.3, "utc_offset_seconds": 10800, "timezone": "Europe/Moscow",
+   "hourly": {"time": ["2026-10-22T14:00", "2026-10-22T15:00", "2026-10-22T16:00"],
+     "precipitation": [2.0, 1.0, 0.0], "cloud_cover": [100, 90, 60], "temperature_2m": [8.0, 7.5, 7.0],
+     "wind_speed_10m": [6.0, 6.0, 5.0], "wind_direction_10m": [260, 260, 255]}},
+  {"latitude": 55.5, "longitude": 38.0, "utc_offset_seconds": 10800, "timezone": "Europe/Moscow",
+   "hourly": {"time": ["2026-10-22T14:00", "2026-10-22T15:00", "2026-10-22T16:00"],
+     "precipitation": [0.0, null, 0.0], "cloud_cover": [10, 20, 30], "temperature_2m": [11.0, 10.5, 10.0],
+     "wind_speed_10m": [2.0, 2.0, 3.0], "wind_direction_10m": [230, 235, 240]}}
+]
