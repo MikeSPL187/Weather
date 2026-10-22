@@ -1,0 +1,24 @@
+{
+  "v": 3,
+  "createdOnFiles": {"v": 1, "at": "2026-10-22T05:54:44Z"},
+  "title": "Aura Weather — макеты",
+  "launch": {"view": "canvas"},
+  "pages": [],
+  "boards": {
+    "Main.dc.html": {"x": 0, "y": 0, "w": 390, "h": 844, "title": "01 · Главный экран", "radius": 44, "is_interactive": true},
+    "Nowcast.dc.html": {"x": 470, "y": 0, "w": 390, "h": 844, "title": "02 · Дождь по минутам", "radius": 44, "is_interactive": true},
+    "Forecast.dc.html": {"x": 940, "y": 0, "w": 390, "h": 844, "title": "03 · Прогноз на 10 дней", "radius": 44, "is_interactive": true},
+    "Details.dc.html": {"x": 1410, "y": 0, "w": 390, "h": 844, "title": "04 · Детали", "radius": 44, "is_interactive": true},
+    "Radar.dc.html": {"x": 0, "y": 1300, "w": 390, "h": 844, "title": "05 · 3D-карта осадков", "radius": 44, "is_interactive": true},
+    "Assistant.dc.html": {"x": 470, "y": 1300, "w": 390, "h": 844, "title": "06 · ИИ-ассистент", "radius": 44, "is_interactive": true},
+    "Widgets.dc.html": {"x": 940, "y": 1300, "w": 390, "h": 844, "title": "07 · Виджеты и Live Activity", "radius": 44},
+    "Styleguide.dc.html": {"x": 0, "y": 2600, "w": 1280, "h": 980, "title": "08 · Дизайн-система"}
+  },
+  "order": ["Main.dc.html", "Nowcast.dc.html", "Forecast.dc.html", "Details.dc.html", "Radar.dc.html", "Assistant.dc.html", "Widgets.dc.html", "Styleguide.dc.html"],
+  "notes": {
+    "row1": {"x": 0, "y": -260, "text": "Основные экраны", "kind": "title1", "maxW": 1800},
+    "row2": {"x": 0, "y": 1040, "text": "Карта, ассистент, виджеты", "kind": "title1", "maxW": 1330},
+    "row3": {"x": 0, "y": 2340, "text": "Дизайн-система «Живая диорама»", "kind": "title1", "maxW": 1280}
+  },
+  "designSystems": []
+}

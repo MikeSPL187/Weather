@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Aura — детали погоды</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Unbounded:wght@300;500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#FFFFFF}a:hover{color:#FFE7A8}
+@keyframes sway{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}
+@media (prefers-reduced-motion: reduce){*{animation:none!important}}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; box-sizing: border-box; background: linear-gradient(180deg, #0E1A44 0%, #172A6E 60%, #24388A 100%); font-family: 'Manrope', system-ui, sans-serif; color: #FFFFFF; display: flex; flex-direction: column; padding: 54px 16px 24px;">
+
+  <header style="display: flex; align-items: center; gap: 8px; padding: 0 4px;">
+    <a href="Main.dc.html" aria-label="Назад на главный экран" style="width: 44px; height: 44px; border-radius: 22px; background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.20); display: flex; align-items: center; justify-content: center; color: #FFFFFF;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg>
+    </a>
+    <div style="display: flex; flex-direction: column; flex-grow: 1;">
+      <div style="font-size: 17px; font-weight: 700;">Подробности</div>
+      <div style="font-size: 13px; color: rgba(255,255,255,0.80);">Москва · сейчас 18°, солнечно</div>
+    </div>
+    <div role="group" aria-label="Единицы ветра" style="display: flex; padding: 3px; border-radius: 14px; background: rgba(255,255,255,0.10);">
+      <button onClick="{{setMs}}" aria-pressed="{{msOn}}" style="height: 44px; padding: 0 10px; border: 0; border-radius: 11px; font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer; {{msS}}">м/с</button>
+      <button onClick="{{setKmh}}" aria-pressed="{{kmhOn}}" style="height: 44px; padding: 0 10px; border: 0; border-radius: 11px; font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer; {{kmhS}}">км/ч</button>
+    </div>
+  </header>
+
+  <div style="margin-top: 18px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;">
+
+    <div style="padding: 14px; border-radius: 24px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.16); box-shadow: inset 0 1px 0 rgba(255,255,255,0.16); display: flex; flex-direction: column; gap: 8px;">
+      <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.8px; color: rgba(255,255,255,0.78);">ВЕТЕР</div>
+      <div role="img" aria-label="Компас: ветер юго-западный" style="width: 108px; height: 108px; margin: 0 auto; border-radius: 50%; position: relative; background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.22), rgba(255,255,255,0.04) 70%); box-shadow: inset 0 2px 0 rgba(255,255,255,0.25), inset 0 -10px 20px rgba(0,0,0,0.25), 0 10px 24px rgba(0,0,0,0.25);">
+        <div aria-hidden="true" style="position: absolute; inset: 6px; border-radius: 50%; background: repeating-conic-gradient(rgba(255,255,255,0.45) 0deg 1.5deg, rgba(255,255,255,0) 1.5deg 15deg); -webkit-mask-image: radial-gradient(circle, transparent 84%, #000 86%); mask-image: radial-gradient(circle, transparent 84%, #000 86%);"></div>
+        <span aria-hidden="true" style="position: absolute; left: 50%; top: 12px; transform: translateX(-50%); font-size: 10px; font-weight: 700; color: #FFC56B;">С</span>
+        <span aria-hidden="true" style="position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.80);">Ю</span>
+        <span aria-hidden="true" style="position: absolute; top: 50%; left: 13px; transform: translateY(-50%); font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.80);">З</span>
+        <span aria-hidden="true" style="position: absolute; top: 50%; right: 13px; transform: translateY(-50%); font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.80);">В</span>
+        <div aria-hidden="true" style="position: absolute; left: 50%; top: 50%; width: 0; height: 0; transform: rotate(45deg);">
+          <div style="position: absolute; left: -3px; top: -36px; width: 6px; height: 72px; animation: sway 4s ease-in-out infinite; transform-origin: 3px 36px;">
+            <div style="position: absolute; left: -5px; top: 0; width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 16px solid #FFC56B;"></div>
+            <div style="position: absolute; left: 1px; top: 14px; width: 4px; height: 56px; border-radius: 2px; background: linear-gradient(180deg, #FFC56B, rgba(255,197,107,0.2));"></div>
+          </div>
+        </div>
+        <div aria-hidden="true" style="position: absolute; left: 50%; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #FFFFFF, #9AA6C8);"></div>
+      </div>
+      <div style="display: flex; align-items: baseline; gap: 4px;"><span style="font-family: 'Unbounded', sans-serif; font-size: 22px; font-weight: 500;">{{wind}}</span><span style="font-size: 12px; color: rgba(255,255,255,0.80);">{{unit}} · ЮЗ</span></div>
+      <div style="font-size: 12px; color: rgba(255,255,255,0.80);">Порывы до {{gust}}</div>
+    </div>
+
+    <div style="padding: 14px; border-radius: 24px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.16); box-shadow: inset 0 1px 0 rgba(255,255,255,0.16); display: flex; flex-direction: column; gap: 8px;">
+      <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.8px; color: rgba(255,255,255,0.78);">УФ-ИНДЕКС</div>
+      <div style="font-family: 'Unbounded', sans-serif; font-size: 40px; font-weight: 500; line-height: 1;">4</div>
+      <div style="font-size: 15px; font-weight: 700;">Умеренный</div>
+      <div aria-hidden="true" style="height: 8px; border-radius: 4px; background: linear-gradient(90deg, #34C77B, #FFD56B, #FF9F43, #FF5D5D, #B76BFF); position: relative; margin-top: 4px;">
+        <span style="position: absolute; left: 33%; top: -3px; width: 14px; height: 14px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 0 0 3px rgba(14,26,68,0.9);"></span>
+      </div>
+      <div style="font-size: 12px; line-height: 1.4; color: rgba(255,255,255,0.82); margin-top: 4px;">Крем SPF 30 — если гулять дольше часа до 15:00</div>
+    </div>
+
+    <div style="grid-column: span 2; padding: 14px; border-radius: 24px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.16); box-shadow: inset 0 1px 0 rgba(255,255,255,0.16);">
+      <div style="display: flex; justify-content: space-between;">
+        <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.8px; color: rgba(255,255,255,0.78);">СОЛНЦЕ</div>
+        <div style="font-size: 12px; color: #FFC56B; font-weight: 700;">Золотой час с 16:31</div>
+      </div>
+      <svg width="326" height="104" viewBox="0 0 340 108" role="img" aria-label="Солнце прошло 70 процентов дневного пути" style="display: block; margin-top: 6px;">
+        <defs>
+          <radialGradient id="sunG" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#FFF8D6"/><stop offset="45%" stop-color="#FFC94A"/><stop offset="100%" stop-color="#E2701A"/></radialGradient>
+          <linearGradient id="arcG" x1="0" x2="1" y1="0" y2="0"><stop offset="0%" stop-color="#FFB547"/><stop offset="100%" stop-color="#FF7A45"/></linearGradient>
+        </defs>
+        <line x1="0" y1="100" x2="340" y2="100" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>
+        <path d="M20 100 A150 90 0 0 1 320 100" fill="none" stroke="rgba(255,255,255,0.30)" stroke-width="2" stroke-dasharray="3 6"/>
+        <path d="M20 100 A150 90 0 0 1 258.5 27" fill="none" stroke="url(#arcG)" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="258.5" cy="27" r="20" fill="rgba(255,200,90,0.25)"/>
+        <circle cx="258.5" cy="27" r="11" fill="url(#sunG)"/>
+      </svg>
+      <div style="display: flex; justify-content: space-between; margin-top: 4px; font-size: 13px;">
+        <span><span style="color: rgba(255,255,255,0.78);">Восход</span> <b>07:41</b></span>
+        <span style="color: rgba(255,255,255,0.78);">Световой день 9 ч 31 мин</span>
+        <span><span style="color: rgba(255,255,255,0.78);">Закат</span> <b>17:12</b></span>
+      </div>
+    </div>
+
+    <div style="padding: 14px; border-radius: 24px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.16); box-shadow: inset 0 1px 0 rgba(255,255,255,0.16); display: flex; flex-direction: column; gap: 8px;">
+      <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.8px; color: rgba(255,255,255,0.78);">ВОЗДУХ</div>
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div role="img" aria-label="Индекс качества воздуха 32 из 150" style="width: 64px; height: 64px; border-radius: 50%; background: conic-gradient(#34C77B 0 21%, rgba(255,255,255,0.14) 21% 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+          <div style="width: 50px; height: 50px; border-radius: 50%; background: #13235C; display: flex; align-items: center; justify-content: center; font-family: 'Unbounded', sans-serif; font-size: 16px; font-weight: 500;">32</div>
+        </div>
+        <div style="display: flex; flex-direction: column;">
+          <span style="font-size: 15px; font-weight: 700; color: #7DE3A8;">Хороший</span>
+          <span style="font-size: 12px; color: rgba(255,255,255,0.80);">PM2.5 · 7 мкг/м³</span>
+        </div>
+      </div>
+      <div style="font-size: 12px; color: rgba(255,255,255,0.82);">Пыльца берёзы: нет</div>
+    </div>
+
+    <div style="padding: 14px; border-radius: 24px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.16); box-shadow: inset 0 1px 0 rgba(255,255,255,0.16); display: flex; flex-direction: column; gap: 8px;">
+      <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.8px; color: rgba(255,255,255,0.78);">ВЛАЖНОСТЬ</div>
+      <div style="font-family: 'Unbounded', sans-serif; font-size: 34px; font-weight: 500; line-height: 1;">48 %</div>
+      <div aria-hidden="true" style="display: flex; gap: 4px; align-items: flex-end; height: 26px;">
+        <span style="flex: 1; height: 40%; border-radius: 3px; background: rgba(111,227,255,0.45);"></span>
+        <span style="flex: 1; height: 55%; border-radius: 3px; background: rgba(111,227,255,0.55);"></span>
+        <span style="flex: 1; height: 70%; border-radius: 3px; background: rgba(111,227,255,0.65);"></span>
+        <span style="flex: 1; height: 50%; border-radius: 3px; background: rgba(111,227,255,0.85);"></span>
+        <span style="flex: 1; height: 45%; border-radius: 3px; background: #6FE3FF;"></span>
+      </div>
+      <div style="font-size: 12px; color: rgba(255,255,255,0.82);">Точка росы 7°</div>
+    </div>
+
+    <div style="padding: 14px; border-radius: 24px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.16); box-shadow: inset 0 1px 0 rgba(255,255,255,0.16); display: flex; flex-direction: column; gap: 6px;">
+      <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.8px; color: rgba(255,255,255,0.78);">ДАВЛЕНИЕ</div>
+      <svg width="134" height="64" viewBox="0 0 134 70" role="img" aria-label="Давление 752 миллиметра, растёт" style="display: block;">
+        <path d="M12 64 A55 55 0 0 1 122 64" fill="none" stroke="rgba(255,255,255,0.16)" stroke-width="8" stroke-linecap="round"/>
+        <path d="M12 64 A55 55 0 0 1 82 11" fill="none" stroke="#6FE3FF" stroke-width="8" stroke-linecap="round"/>
+        <circle cx="82" cy="11" r="6" fill="#FFFFFF"/>
+      </svg>
+      <div style="display: flex; align-items: baseline; gap: 4px;"><span style="font-family: 'Unbounded', sans-serif; font-size: 22px; font-weight: 500;">752</span><span style="font-size: 12px; color: rgba(255,255,255,0.80);">мм рт. ст.</span></div>
+      <div style="font-size: 12px; color: #7DE3A8; font-weight: 700;">↑ растёт · +2 за 3 ч</div>
+    </div>
+
+    <div style="padding: 14px; border-radius: 24px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.16); box-shadow: inset 0 1px 0 rgba(255,255,255,0.16); display: flex; flex-direction: column; gap: 8px;">
+      <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.8px; color: rgba(255,255,255,0.78);">ЛУНА</div>
+      <div role="img" aria-label="Растущая луна" style="width: 58px; height: 58px; border-radius: 50%; background: radial-gradient(circle at 60% 35%, #FFFFFF 0%, #E6E9F5 45%, #A9B0CC 100%); box-shadow: inset 14px 0 0 0 rgba(12,20,56,0.88), 0 0 24px rgba(200,210,255,0.4);"></div>
+      <div style="font-size: 15px; font-weight: 700;">Растущая</div>
+      <div style="font-size: 12px; color: rgba(255,255,255,0.82);">Полнолуние через 4 дня</div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { kmh: false };
+  }
+  renderVals() {
+    const k = this.state.kmh;
+    const on = 'background: #FFFFFF; color: #0E1A44;';
+    const off = 'background: transparent; color: #FFFFFF;';
+    return {
+      wind: k ? '14' : '4', gust: k ? '32 км/ч' : '9 м/с', unit: k ? 'км/ч' : 'м/с',
+      msOn: k ? 'false' : 'true', kmhOn: k ? 'true' : 'false',
+      msS: k ? off : on, kmhS: k ? on : off,
+      setMs: () => this.setState({ kmh: false }),
+      setKmh: () => this.setState({ kmh: true })
+    };
+  }
+}
+</script>
+</body>
+</html>

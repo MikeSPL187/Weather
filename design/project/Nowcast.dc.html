@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Aura — дождь по минутам</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Unbounded:wght@300;500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#FFFFFF}a:hover{color:#9FEFFF}
+@keyframes fall{0%{transform:translateY(-20px);opacity:0}15%{opacity:1}100%{transform:translateY(90px);opacity:0}}
+@keyframes rise{from{transform:scaleY(0.2)}to{transform:scaleY(1)}}
+@media (prefers-reduced-motion: reduce){*{animation:none!important}}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; box-sizing: border-box; background: linear-gradient(180deg, #121827 0%, #24304A 55%, #3A4862 100%); font-family: 'Manrope', system-ui, sans-serif; color: #FFFFFF; display: flex; flex-direction: column; padding: 54px 16px 24px;">
+
+  <sc-for list="{{drops}}" as="d" hint-placeholder-count="14">
+    <div aria-hidden="true" style="position: absolute; top: 40px; width: 2px; height: 16px; border-radius: 2px; background: linear-gradient(180deg, rgba(190,215,255,0), rgba(190,215,255,0.55)); animation: fall 1s linear infinite; {{d.s}}"></div>
+  </sc-for>
+
+  <header style="display: flex; align-items: center; gap: 8px; padding: 0 4px;">
+    <a href="Main.dc.html" aria-label="Назад на главный экран" style="width: 44px; height: 44px; border-radius: 22px; background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.20); display: flex; align-items: center; justify-content: center; color: #FFFFFF;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg>
+    </a>
+    <div style="display: flex; flex-direction: column;">
+      <div style="font-size: 17px; font-weight: 700;">Дождь по минутам</div>
+      <div style="font-size: 13px; color: rgba(255,255,255,0.80);">Москва, Хамовники · 17:05</div>
+    </div>
+  </header>
+
+  <section style="margin-top: 26px; padding: 0 4px; display: flex; flex-direction: column; gap: 10px;">
+    <div style="font-family: 'Unbounded', sans-serif; font-weight: 500; font-size: 30px; line-height: 1.15; letter-spacing: -0.5px;">Дождь закончится через 24 мин</div>
+    <div style="font-size: 15px; color: rgba(255,255,255,0.86); line-height: 1.45;">Снова пойдёт около 18:25 — слабый, на 25–30 минут. Зонт лучше взять.</div>
+    <div style="display: flex; gap: 8px; margin-top: 4px;">
+      <div style="padding: 6px 12px; border-radius: 999px; background: rgba(111,227,255,0.18); border: 1px solid rgba(111,227,255,0.45); color: #B5F3FF; font-size: 13px; font-weight: 700;">Уверенность 87 %</div>
+      <div style="padding: 6px 12px; border-radius: 999px; background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.22); font-size: 13px; font-weight: 600;">Сейчас 2,4 мм/ч</div>
+    </div>
+  </section>
+
+  <div style="margin-top: 22px; padding: 18px 14px 14px; border-radius: 28px; background: rgba(10,16,36,0.45); border: 1px solid rgba(255,255,255,0.16); box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 20px 40px rgba(0,0,0,0.25);">
+    <div style="display: flex; justify-content: space-between; align-items: baseline;">
+      <div style="font-size: 15px; font-weight: 700;">{{selTime}}</div>
+      <div style="font-size: 13px; color: #B5F3FF; font-weight: 600;">{{selText}}</div>
+    </div>
+    <div role="img" aria-label="Интенсивность осадков на 2 часа: дождь до 17:30, затем сухо, слабый дождь с 18:25 до 18:55" style="height: 150px; margin-top: 12px; perspective: 520px;">
+      <div style="height: 150px; display: flex; align-items: flex-end; gap: 4px; transform: rotateX(16deg); transform-origin: 50% 100%;">
+        <sc-for list="{{bars}}" as="b" hint-placeholder-count="24">
+          <div style="flex: 1; border-radius: 6px 6px 3px 3px; transform-origin: 50% 100%; animation: rise 0.9s cubic-bezier(.2,.8,.2,1) both; {{b.s}}"></div>
+        </sc-for>
+      </div>
+    </div>
+    <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 12px; color: rgba(255,255,255,0.78);">
+      <span>17:05</span><span>17:35</span><span>18:05</span><span>18:35</span><span>19:05</span>
+    </div>
+    <div role="group" aria-label="Момент времени" style="display: flex; gap: 6px; margin-top: 14px;">
+      <sc-for list="{{pills}}" as="p" hint-placeholder-count="4">
+        <button onClick="{{p.pick}}" aria-pressed="{{p.on}}" style="flex: 1; height: 44px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.20); font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; {{p.s}}">{{p.label}}</button>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 14px; margin-top: 12px; padding: 0 6px; font-size: 12px; color: rgba(255,255,255,0.82);">
+    <span style="display: flex; align-items: center; gap: 6px;"><span aria-hidden="true" style="width: 10px; height: 10px; border-radius: 3px; background: #5FB8FF;"></span>Слабый</span>
+    <span style="display: flex; align-items: center; gap: 6px;"><span aria-hidden="true" style="width: 10px; height: 10px; border-radius: 3px; background: #6FE3FF;"></span>Умеренный</span>
+    <span style="display: flex; align-items: center; gap: 6px;"><span aria-hidden="true" style="width: 10px; height: 10px; border-radius: 3px; background: #E3FBFF;"></span>Сильный</span>
+  </div>
+
+  <button onClick="{{toggleNotify}}" aria-pressed="{{notifyOn}}" style="margin-top: 16px; display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 22px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); color: #FFFFFF; font-family: inherit; text-align: left; cursor: pointer;">
+    <span aria-hidden="true" style="width: 36px; height: 36px; border-radius: 12px; background: rgba(255,181,71,0.20); color: #FFC56B; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>
+    </span>
+    <span style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1;">
+      <span style="font-size: 15px; font-weight: 700;">Сообщить, когда дождь стихнет</span>
+      <span style="font-size: 12px; color: rgba(255,255,255,0.80);">Один пуш, без спама</span>
+    </span>
+    <span aria-hidden="true" style="width: 50px; height: 30px; border-radius: 15px; position: relative; flex-shrink: 0; {{switchBg}}">
+      <span style="position: absolute; top: 3px; width: 24px; height: 24px; border-radius: 12px; background: #FFFFFF; box-shadow: 0 2px 6px rgba(0,0,0,0.3); {{knob}}"></span>
+    </span>
+  </button>
+
+  <div style="margin-top: 12px; padding: 14px 16px; border-radius: 22px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18);">
+    <div style="font-size: 15px; font-weight: 700;">Что у вас за окном?</div>
+    <div style="font-size: 12px; color: rgba(255,255,255,0.80); margin-top: 2px;">{{reportNote}}</div>
+    <div role="group" aria-label="Отчёт о погоде" style="display: flex; gap: 6px; margin-top: 10px;">
+      <sc-for list="{{reports}}" as="r" hint-placeholder-count="4">
+        <button onClick="{{r.pick}}" aria-pressed="{{r.on}}" style="flex: 1; height: 44px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.22); font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; {{r.s}}">{{r.label}}</button>
+      </sc-for>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { sel: 0, notify: true, report: -1 };
+  }
+  renderVals() {
+    const v = [2.4, 2.8, 2.2, 1.4, 0.6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.2, 0.5, 0.9, 1.1, 0.8, 0.4, 0.1, 0];
+    const color = (x) => x >= 2 ? '#E3FBFF' : x >= 1 ? '#6FE3FF' : '#5FB8FF';
+    const sel = this.state.sel;
+    const bars = v.map((x, i) => {
+      const h = x === 0 ? 4 : Math.round(14 + x * 42);
+      const on = Math.floor(i / 6) === sel && x > 0;
+      const bg = x === 0 ? 'background: rgba(255,255,255,0.22);' : 'background: linear-gradient(180deg, ' + color(x) + ' 0%, rgba(95,184,255,0.55) 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.7)' + (on ? ', 0 0 16px rgba(111,227,255,0.8)' : '') + ';';
+      return { s: 'height: ' + h + 'px; animation-delay: ' + (i * 0.03).toFixed(2) + 's; opacity: ' + (Math.floor(i / 6) === sel ? 1 : 0.55) + '; ' + bg };
+    });
+    const P = [
+      { label: 'Сейчас', time: '17:05 – 17:30', text: 'Умеренный дождь, стихает' },
+      { label: '+30 мин', time: '17:35 – 18:00', text: 'Без осадков' },
+      { label: '+60 мин', time: '18:05 – 18:30', text: 'Сухо, с 18:25 — морось' },
+      { label: '+90 мин', time: '18:35 – 19:00', text: 'Слабый дождь до 18:55' }
+    ];
+    const pills = P.map((p, i) => ({
+      label: p.label, on: sel === i ? 'true' : 'false',
+      s: sel === i ? 'background: #FFFFFF; color: #121827;' : 'background: rgba(255,255,255,0.08); color: #FFFFFF;',
+      pick: () => this.setState({ sel: i })
+    }));
+    const R = ['Сухо', 'Моросит', 'Дождь', 'Ливень'];
+    const reports = R.map((label, i) => ({
+      label, on: this.state.report === i ? 'true' : 'false',
+      s: this.state.report === i ? 'background: #6FE3FF; color: #0B1A2E;' : 'background: rgba(255,255,255,0.06); color: #FFFFFF;',
+      pick: () => this.setState({ report: i })
+    }));
+    const drops = Array.from({ length: 14 }, (_, i) => ({ s: 'left: ' + (14 + (i * 61) % 360) + 'px; animation-delay: -' + (i * 0.17).toFixed(2) + 's;' }));
+    const on = this.state.notify;
+    return {
+      bars, pills, reports, drops,
+      selTime: P[sel].time, selText: P[sel].text,
+      notifyOn: on ? 'true' : 'false',
+      toggleNotify: () => this.setState({ notify: !on }),
+      switchBg: on ? 'background: #34C77B;' : 'background: rgba(255,255,255,0.25);',
+      knob: on ? 'left: 23px;' : 'left: 3px;',
+      reportNote: this.state.report >= 0 ? 'Спасибо! Ваш отчёт уточнит прогноз для соседей.' : 'Отметка уточняет прогноз для всех рядом с вами'
+    };
+  }
+}
+</script>
+</body>
+</html>

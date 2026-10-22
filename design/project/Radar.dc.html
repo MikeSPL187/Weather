@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Aura — 3D-карта осадков</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Unbounded:wght@300;500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#FFFFFF}a:hover{color:#9FEFFF}
+@keyframes stream{0%{transform:translateX(-40px);opacity:0}20%{opacity:1}100%{transform:translateX(120px);opacity:0}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes ping{0%{transform:scale(0.6);opacity:0.9}100%{transform:scale(2.2);opacity:0}}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; box-sizing: border-box; background: radial-gradient(ellipse at 50% 40%, #1A2A5E 0%, #0A1030 70%); font-family: 'Manrope', system-ui, sans-serif; color: #FFFFFF;">
+
+  <div aria-hidden="true" style="position: absolute; left: -70px; top: 150px; width: 530px; height: 530px; transform: perspective(900px) rotateX(56deg) rotateZ(-18deg); transform-origin: 50% 50%;">
+    <div style="position: absolute; inset: 0; border-radius: 40px; background-color: #12204A; background-image: repeating-linear-gradient(0deg, rgba(255,255,255,0.06) 0 1px, transparent 1px 40px), repeating-linear-gradient(90deg, rgba(255,255,255,0.06) 0 1px, transparent 1px 40px); box-shadow: 0 60px 80px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.12);"></div>
+    <svg width="530" height="530" viewBox="0 0 530 530" style="position: absolute; inset: 0;">
+      <path d="M-10 300 C 90 260, 140 360, 230 320 S 360 210, 440 260 S 520 330, 540 300" fill="none" stroke="#2C5BB8" stroke-width="18" stroke-linecap="round" opacity="0.8"/>
+      <path d="M-10 300 C 90 260, 140 360, 230 320 S 360 210, 440 260 S 520 330, 540 300" fill="none" stroke="#4E86E8" stroke-width="4" stroke-linecap="round" opacity="0.6"/>
+      <rect x="120" y="120" width="70" height="50" rx="10" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.14)"/>
+      <rect x="210" y="140" width="90" height="60" rx="12" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.14)"/>
+      <rect x="320" y="110" width="60" height="70" rx="10" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.14)"/>
+      <rect x="150" y="360" width="100" height="60" rx="12" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.14)"/>
+      <rect x="280" y="350" width="70" height="80" rx="10" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.14)"/>
+      <circle cx="265" cy="265" r="120" fill="none" stroke="rgba(255,255,255,0.10)" stroke-dasharray="4 8"/>
+      <circle cx="265" cy="265" r="220" fill="none" stroke="rgba(255,255,255,0.08)" stroke-dasharray="4 8"/>
+    </svg>
+
+    <sc-if value="{{isPrecip}}" hint-placeholder-val="{{ true }}">
+      <sc-for list="{{blobs}}" as="b" hint-placeholder-count="4">
+        <div style="position: absolute; border-radius: 50%; transition: left 0.6s ease, top 0.6s ease; {{b.s}}"></div>
+      </sc-for>
+    </sc-if>
+    <sc-if value="{{isClouds}}" hint-placeholder-val="{{ false }}">
+      <sc-for list="{{clouds}}" as="c" hint-placeholder-count="5">
+        <div style="position: absolute; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,0.75) 0%, rgba(255,255,255,0) 70%); transition: left 0.6s ease, top 0.6s ease; {{c.s}}"></div>
+      </sc-for>
+    </sc-if>
+    <sc-if value="{{isTemp}}" hint-placeholder-val="{{ false }}">
+      <div style="position: absolute; inset: 0; border-radius: 40px; background: linear-gradient(130deg, rgba(255,159,67,0.55) 0%, rgba(255,213,107,0.40) 40%, rgba(182,240,156,0.30) 65%, rgba(111,227,255,0.40) 100%);"></div>
+    </sc-if>
+    <sc-if value="{{isWind}}" hint-placeholder-val="{{ false }}">
+      <sc-for list="{{streaks}}" as="w" hint-placeholder-count="16">
+        <div style="position: absolute; width: 60px; height: 2px; border-radius: 1px; background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.85)); animation: stream 2.4s linear infinite; {{w.s}}"></div>
+      </sc-for>
+    </sc-if>
+  </div>
+
+  <div aria-hidden="true" style="position: absolute; left: 178px; top: 372px; width: 36px; height: 80px; animation: bob 3s ease-in-out infinite;">
+    <div style="position: absolute; left: 4px; top: 60px; width: 28px; height: 12px; border-radius: 50%; background: rgba(111,227,255,0.6); animation: ping 2s ease-out infinite;"></div>
+    <div style="position: absolute; left: 16px; top: 26px; width: 4px; height: 40px; border-radius: 2px; background: linear-gradient(180deg, #FFFFFF, rgba(255,255,255,0.2));"></div>
+    <div style="position: absolute; left: 4px; top: 0; width: 28px; height: 28px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #FFF4C2 0%, #FFC94A 45%, #F08A1C 100%); box-shadow: 0 0 18px rgba(255,190,80,0.8);"></div>
+  </div>
+  <div style="position: absolute; left: 222px; top: 370px; padding: 6px 10px; border-radius: 12px; background: rgba(8,14,38,0.75); border: 1px solid rgba(255,255,255,0.20); font-size: 12px; font-weight: 700;">Вы здесь · 12°</div>
+
+  <header style="position: absolute; left: 16px; right: 16px; top: 54px; display: flex; flex-direction: column; gap: 12px;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <h1 style="margin: 0; font-family: 'Unbounded', sans-serif; font-weight: 500; font-size: 26px; flex-grow: 1;">Карта</h1>
+      <button aria-label="Поиск места" style="width: 44px; height: 44px; border-radius: 22px; border: 1px solid rgba(255,255,255,0.22); background: rgba(255,255,255,0.08); color: #FFFFFF; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      </button>
+      <button aria-label="Моё местоположение" style="width: 44px; height: 44px; border-radius: 22px; border: 1px solid rgba(255,255,255,0.22); background: rgba(255,255,255,0.08); color: #FFFFFF; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+      </button>
+    </div>
+    <div role="group" aria-label="Слой карты" style="display: flex; gap: 6px;">
+      <sc-for list="{{layers}}" as="l" hint-placeholder-count="4">
+        <button onClick="{{l.pick}}" aria-pressed="{{l.on}}" style="height: 44px; padding: 0 14px; border-radius: 22px; border: 1px solid rgba(255,255,255,0.22); font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; {{l.s}}">{{l.label}}</button>
+      </sc-for>
+    </div>
+  </header>
+
+  <div style="position: absolute; left: 16px; right: 16px; bottom: 104px; padding: 14px; border-radius: 26px; background: rgba(8,14,38,0.72); border: 1px solid rgba(255,255,255,0.18); box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 20px 40px rgba(0,0,0,0.35); backdrop-filter: blur(24px);">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <button onClick="{{next}}" aria-label="Следующий шаг времени" style="width: 44px; height: 44px; border-radius: 22px; border: 0; background: #FFFFFF; color: #0A1030; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l12-7.5z"/></svg>
+      </button>
+      <div style="display: flex; flex-direction: column; flex-grow: 1;">
+        <span style="font-size: 15px; font-weight: 700;">{{timeLabel}}</span>
+        <span style="font-size: 12px; color: rgba(255,255,255,0.80);">{{timeNote}}</span>
+      </div>
+    </div>
+    <div role="group" aria-label="Время" style="display: flex; gap: 4px; margin-top: 12px;">
+      <sc-for list="{{stops}}" as="t" hint-placeholder-count="6">
+        <button onClick="{{t.pick}}" aria-pressed="{{t.on}}" style="flex: 1; height: 44px; border-radius: 12px; border: 0; font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer; {{t.s}}">{{t.label}}</button>
+      </sc-for>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 11px; color: rgba(255,255,255,0.80);">
+      <span>Слабый</span>
+      <span aria-hidden="true" style="flex-grow: 1; height: 6px; border-radius: 3px; background: linear-gradient(90deg, #5FB8FF, #6FE3FF, #9C7BFF, #E06BFF);"></span>
+      <span>Ливень</span>
+    </div>
+  </div>
+
+  <nav aria-label="Основная навигация" style="position: absolute; left: 16px; right: 16px; bottom: 22px; height: 68px; border-radius: 34px; background: rgba(8,14,38,0.70); border: 1px solid rgba(255,255,255,0.18); box-shadow: inset 0 1px 0 rgba(255,255,255,0.20), 0 16px 40px rgba(0,0,0,0.30); backdrop-filter: blur(30px); display: flex; align-items: center; padding: 0 8px; gap: 4px;">
+    <a href="Main.dc.html" style="flex: 1; height: 52px; border-radius: 26px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-decoration: none; color: rgba(255,255,255,0.80); font-size: 11px; font-weight: 600;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Сейчас</a>
+    <a href="Forecast.dc.html" style="flex: 1; height: 52px; border-radius: 26px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-decoration: none; color: rgba(255,255,255,0.80); font-size: 11px; font-weight: 600;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>Прогноз</a>
+    <a href="Radar.dc.html" aria-current="page" style="flex: 1; height: 52px; border-radius: 26px; background: rgba(255,255,255,0.16); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-decoration: none; color: #FFFFFF; font-size: 11px; font-weight: 700;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5 9-5z"/><path d="m3 13 9 5 9-5"/></svg>Карта</a>
+    <a href="Assistant.dc.html" style="flex: 1; height: 52px; border-radius: 26px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-decoration: none; color: rgba(255,255,255,0.80); font-size: 11px; font-weight: 600;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>Ассистент</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { layer: 0, t: 1 };
+  }
+  renderVals() {
+    const t = this.state.t;
+    const dx = (t - 1) * 45, dy = (t - 1) * -18;
+    const B = [
+      [110, 150, 160, 'rgba(95,184,255,0.60)'],
+      [230, 200, 210, 'rgba(111,227,255,0.55)'],
+      [270, 230, 110, 'rgba(156,123,255,0.65)'],
+      [300, 250, 50, 'rgba(224,107,255,0.75)']
+    ];
+    const blobs = B.map((b) => ({ s: 'left: ' + (b[0] + dx - b[2] / 2) + 'px; top: ' + (b[1] + dy - b[2] / 2) + 'px; width: ' + b[2] + 'px; height: ' + Math.round(b[2] * 0.8) + 'px; background: radial-gradient(circle, ' + b[3] + ' 0%, rgba(0,0,0,0) 70%);' }));
+    const C = [[90, 120, 180], [260, 90, 220], [380, 300, 200], [160, 380, 160], [420, 150, 140]];
+    const clouds = C.map((c) => ({ s: 'left: ' + (c[0] + dx - c[2] / 2) + 'px; top: ' + (c[1] + dy - c[2] / 2) + 'px; width: ' + c[2] + 'px; height: ' + Math.round(c[2] * 0.7) + 'px;' }));
+    const streaks = Array.from({ length: 16 }, (_, i) => ({ s: 'left: ' + ((i * 97) % 440) + 'px; top: ' + (30 + (i * 61) % 460) + 'px; animation-delay: -' + (i * 0.27).toFixed(2) + 's;' }));
+    const L = ['Осадки', 'Облака', 'Темп.', 'Ветер'];
+    const layers = L.map((label, i) => ({
+      label, on: this.state.layer === i ? 'true' : 'false',
+      s: this.state.layer === i ? 'background: #FFFFFF; color: #0A1030;' : 'background: rgba(8,14,38,0.55); color: #FFFFFF;',
+      pick: () => this.setState({ layer: i })
+    }));
+    const T = [
+      ['−30', '16:35', 'Прошлое · радар'],
+      ['Сейчас', '17:05', 'Дождь над вами, стихает к 17:30'],
+      ['+30', '17:35', 'Прогноз · фронт уходит на восток'],
+      ['+60', '18:05', 'Прогноз · сухо над центром'],
+      ['+90', '18:35', 'Прогноз · новая полоса слабого дождя'],
+      ['+120', '19:05', 'Прогноз · без осадков']
+    ];
+    const stops = T.map((s, i) => ({
+      label: s[0], on: t === i ? 'true' : 'false',
+      s: t === i ? 'background: #6FE3FF; color: #0A1030;' : 'background: rgba(255,255,255,0.08); color: #FFFFFF;',
+      pick: () => this.setState({ t: i })
+    }));
+    const layer = this.state.layer;
+    return {
+      blobs, clouds, streaks, layers, stops,
+      isPrecip: layer === 0, isClouds: layer === 1, isTemp: layer === 2, isWind: layer === 3,
+      timeLabel: T[t][1] + (t === 1 ? ' · сейчас' : ''), timeNote: T[t][2],
+      next: () => this.setState({ t: (t + 1) % T.length })
+    };
+  }
+}
+</script>
+</body>
+</html>

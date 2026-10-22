@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Aura — главный экран</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Unbounded:wght@300;500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#FFFFFF}a:hover{color:#FFE7A8}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes drift{0%,100%{transform:translateX(0)}50%{transform:translateX(18px)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:.75;transform:scale(1)}50%{opacity:1;transform:scale(1.06)}}
+@keyframes fall{0%{transform:translateY(-20px);opacity:0}15%{opacity:1}100%{transform:translateY(130px);opacity:0}}
+@keyframes flake{0%{transform:translate(0,-20px);opacity:0}15%{opacity:1}50%{transform:translate(10px,60px)}100%{transform:translate(-6px,140px);opacity:0}}
+@keyframes twinkle{0%,100%{opacity:.25}50%{opacity:1}}
+@media (prefers-reduced-motion: reduce){*{animation:none!important}}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; box-sizing: border-box; background: {{bg}}; font-family: 'Manrope', system-ui, sans-serif; color: #FFFFFF; display: flex; flex-direction: column;">
+
+  <header style="display: flex; align-items: center; justify-content: space-between; padding: 54px 20px 0 24px;">
+    <div style="display: flex; flex-direction: column; gap: 2px;">
+      <div style="display: flex; align-items: center; gap: 6px; font-size: 20px; font-weight: 700;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
+        Москва
+      </div>
+      <div style="font-size: 13px; color: rgba(255,255,255,0.86);">{{time}}</div>
+    </div>
+    <button aria-label="Добавить город" style="width: 44px; height: 44px; border-radius: 22px; border: 1px solid rgba(255,255,255,0.28); background: rgba(10,20,50,0.22); color: #FFFFFF; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+    </button>
+  </header>
+
+  <div role="img" aria-label="{{sceneLabel}}" style="position: relative; height: 262px; flex-shrink: 0;">
+    <div aria-hidden="true" style="position: absolute; left: 75px; bottom: 4px; width: 240px; height: 58px;">
+      <div style="position: absolute; left: 0; top: 16px; width: 240px; height: 42px; border-radius: 50%; background: linear-gradient(180deg, rgba(255,255,255,0.20), rgba(255,255,255,0.04)); box-shadow: 0 24px 40px rgba(0,0,0,0.28);"></div>
+      <div style="position: absolute; left: 0; top: 0; width: 240px; height: 42px; border-radius: 50%; background: radial-gradient(ellipse at 50% 35%, rgba(255,255,255,0.42), rgba(255,255,255,0.08) 72%); border: 1px solid rgba(255,255,255,0.40);"></div>
+      <div style="position: absolute; left: 70px; top: 12px; width: 100px; height: 16px; border-radius: 50%; background: rgba(0,10,40,0.28); filter: blur(6px);"></div>
+    </div>
+
+    <sc-if value="{{isSun}}" hint-placeholder-val="{{ true }}">
+      <div aria-hidden="true" style="position: absolute; left: 70px; top: 0; width: 250px; height: 250px; border-radius: 50%; background: radial-gradient(circle, rgba(255,214,120,0.55) 0%, rgba(255,214,120,0) 65%); animation: pulse 5s ease-in-out infinite;"></div>
+      <div aria-hidden="true" style="position: absolute; left: 80px; top: 10px; width: 230px; height: 230px; border-radius: 50%; background: repeating-conic-gradient(rgba(255,236,170,0.22) 0deg 5deg, rgba(255,236,170,0) 5deg 18deg); -webkit-mask-image: radial-gradient(circle, transparent 36%, #000 40%, transparent 70%); mask-image: radial-gradient(circle, transparent 36%, #000 40%, transparent 70%); animation: spin 40s linear infinite;"></div>
+      <div aria-hidden="true" style="position: absolute; left: 125px; top: 55px; width: 140px; height: 140px; border-radius: 50%; background: radial-gradient(circle at 34% 30%, #FFF8D6 0%, #FFD86B 28%, #FFA92E 62%, #E2701A 100%); box-shadow: 0 0 70px rgba(255,190,80,0.75), inset -14px -18px 32px rgba(180,60,0,0.45); animation: float 6s ease-in-out infinite;"></div>
+      <div aria-hidden="true" style="position: absolute; left: 210px; top: 140px; width: 150px; height: 80px; animation: drift 9s ease-in-out infinite;">
+        <div style="position: absolute; left: 0; top: 34px; width: 60px; height: 44px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #FFFFFF 0%, #EEF3FF 45%, #BFCBE6 100%); box-shadow: inset -6px -8px 14px rgba(80,100,150,0.25);"></div>
+        <div style="position: absolute; left: 30px; top: 6px; width: 76px; height: 70px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #FFFFFF 0%, #EEF3FF 45%, #BFCBE6 100%); box-shadow: inset -8px -10px 18px rgba(80,100,150,0.25);"></div>
+        <div style="position: absolute; left: 86px; top: 26px; width: 60px; height: 52px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #FFFFFF 0%, #EEF3FF 45%, #BFCBE6 100%); box-shadow: inset -6px -8px 14px rgba(80,100,150,0.25);"></div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{isRain}}" hint-placeholder-val="{{ false }}">
+      <sc-for list="{{drops}}" as="d" hint-placeholder-count="20">
+        <div aria-hidden="true" style="position: absolute; top: 120px; width: 2px; height: 18px; border-radius: 2px; background: linear-gradient(180deg, rgba(190,215,255,0), rgba(200,225,255,0.95)); animation: fall 0.8s linear infinite; {{d.s}}"></div>
+      </sc-for>
+      <div aria-hidden="true" style="position: absolute; left: 70px; top: 30px; width: 250px; height: 120px; animation: drift 10s ease-in-out infinite;">
+        <div style="position: absolute; left: 0; top: 50px; width: 96px; height: 70px; border-radius: 50%; background: radial-gradient(circle at 35% 28%, #C9D3E6 0%, #8592AD 50%, #4B5670 100%); box-shadow: inset -10px -12px 22px rgba(20,25,45,0.45);"></div>
+        <div style="position: absolute; left: 56px; top: 0; width: 128px; height: 116px; border-radius: 50%; background: radial-gradient(circle at 35% 28%, #D5DDEE 0%, #8D9AB5 50%, #4B5670 100%); box-shadow: inset -12px -14px 26px rgba(20,25,45,0.45);"></div>
+        <div style="position: absolute; left: 150px; top: 36px; width: 100px; height: 84px; border-radius: 50%; background: radial-gradient(circle at 35% 28%, #C9D3E6 0%, #8592AD 50%, #4B5670 100%); box-shadow: inset -10px -12px 22px rgba(20,25,45,0.45);"></div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{isNight}}" hint-placeholder-val="{{ false }}">
+      <sc-for list="{{stars}}" as="st" hint-placeholder-count="18">
+        <div aria-hidden="true" style="position: absolute; width: 3px; height: 3px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 0 6px rgba(255,255,255,0.9); animation: twinkle 3s ease-in-out infinite; {{st.s}}"></div>
+      </sc-for>
+      <div aria-hidden="true" style="position: absolute; left: 115px; top: 20px; width: 160px; height: 160px; border-radius: 50%; background: radial-gradient(circle, rgba(170,185,255,0.40) 0%, rgba(170,185,255,0) 70%);"></div>
+      <div aria-hidden="true" style="position: absolute; left: 140px; top: 45px; width: 110px; height: 110px; border-radius: 50%; background: radial-gradient(circle at 34% 30%, #FFFFFF 0%, #E9ECF7 45%, #A8AFCB 100%); box-shadow: 0 0 50px rgba(200,210,255,0.55), inset -12px -14px 26px rgba(60,70,120,0.45); animation: float 7s ease-in-out infinite;">
+        <div style="position: absolute; left: 26px; top: 30px; width: 20px; height: 20px; border-radius: 50%; background: rgba(140,150,190,0.45);"></div>
+        <div style="position: absolute; left: 60px; top: 58px; width: 14px; height: 14px; border-radius: 50%; background: rgba(140,150,190,0.40);"></div>
+        <div style="position: absolute; left: 44px; top: 74px; width: 9px; height: 9px; border-radius: 50%; background: rgba(140,150,190,0.40);"></div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{isSnow}}" hint-placeholder-val="{{ false }}">
+      <sc-for list="{{flakes}}" as="f" hint-placeholder-count="20">
+        <div aria-hidden="true" style="position: absolute; top: 110px; width: 7px; height: 7px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #FFFFFF, #DCE7FA); box-shadow: 0 0 6px rgba(255,255,255,0.8); animation: flake 3.2s linear infinite; {{f.s}}"></div>
+      </sc-for>
+      <div aria-hidden="true" style="position: absolute; left: 70px; top: 30px; width: 250px; height: 120px; animation: drift 11s ease-in-out infinite;">
+        <div style="position: absolute; left: 0; top: 50px; width: 96px; height: 70px; border-radius: 50%; background: radial-gradient(circle at 35% 28%, #FFFFFF 0%, #DCE5F5 50%, #93A3C2 100%); box-shadow: inset -10px -12px 22px rgba(40,55,90,0.30);"></div>
+        <div style="position: absolute; left: 56px; top: 0; width: 128px; height: 116px; border-radius: 50%; background: radial-gradient(circle at 35% 28%, #FFFFFF 0%, #E2EAF8 50%, #9AA9C7 100%); box-shadow: inset -12px -14px 26px rgba(40,55,90,0.30);"></div>
+        <div style="position: absolute; left: 150px; top: 36px; width: 100px; height: 84px; border-radius: 50%; background: radial-gradient(circle at 35% 28%, #FFFFFF 0%, #DCE5F5 50%, #93A3C2 100%); box-shadow: inset -10px -12px 22px rgba(40,55,90,0.30);"></div>
+      </div>
+    </sc-if>
+  </div>
+
+  <a href="Details.dc.html" aria-label="Подробности погоды" style="display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 0 24px; text-decoration: none; color: #FFFFFF;">
+    <div style="font-family: 'Unbounded', sans-serif; font-weight: 300; font-size: 96px; line-height: 1; letter-spacing: -4px; text-shadow: 0 8px 30px rgba(0,0,0,0.25);">{{temp}}</div>
+    <div style="font-size: 20px; font-weight: 600; margin-top: 4px;">{{cond}}</div>
+    <div style="font-size: 14px; color: rgba(255,255,255,0.88);">{{feels}} · {{range}}</div>
+  </a>
+
+  <a href="Nowcast.dc.html" style="margin: 18px 16px 0; display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 22px; background: rgba(10,20,50,0.26); border: 1px solid rgba(255,255,255,0.22); box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), 0 10px 30px rgba(0,0,0,0.15); backdrop-filter: blur(24px); text-decoration: none; color: #FFFFFF;">
+    <div style="width: 36px; height: 36px; border-radius: 12px; background: rgba(111,227,255,0.22); display: flex; align-items: center; justify-content: center; color: #9FEFFF; flex-shrink: 0;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1;">
+      <div style="font-size: 15px; font-weight: 700;">{{now}}</div>
+      <div style="font-size: 12px; color: rgba(255,255,255,0.84);">{{nowSub}}</div>
+    </div>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+  </a>
+
+  <div style="margin: 12px 16px 0; padding: 14px 8px; border-radius: 22px; background: rgba(10,20,50,0.26); border: 1px solid rgba(255,255,255,0.22); box-shadow: inset 0 1px 0 rgba(255,255,255,0.25); display: flex; justify-content: space-between;">
+    <sc-for list="{{hours}}" as="h" hint-placeholder-count="6">
+      <button onClick="{{h.pick}}" aria-pressed="{{h.on}}" style="width: 54px; min-height: 92px; border: 0; border-radius: 16px; background: {{h.bg}}; color: #FFFFFF; font-family: inherit; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 8px 0; cursor: pointer;">
+        <span style="font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.88);">{{h.t}}</span>
+        <span aria-hidden="true" style="width: 24px; height: 24px; border-radius: 50%; {{h.orb}}"></span>
+        <span style="font-size: 16px; font-weight: 700;">{{h.temp}}</span>
+      </button>
+    </sc-for>
+  </div>
+
+  <nav aria-label="Основная навигация" style="position: absolute; left: 16px; right: 16px; bottom: 22px; height: 68px; border-radius: 34px; background: rgba(8,14,38,0.55); border: 1px solid rgba(255,255,255,0.18); box-shadow: inset 0 1px 0 rgba(255,255,255,0.20), 0 16px 40px rgba(0,0,0,0.30); backdrop-filter: blur(30px); display: flex; align-items: center; padding: 0 8px; gap: 4px;">
+    <a href="Main.dc.html" aria-current="page" style="flex: 1; height: 52px; border-radius: 26px; background: rgba(255,255,255,0.16); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-decoration: none; color: #FFFFFF; font-size: 11px; font-weight: 700;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Сейчас</a>
+    <a href="Forecast.dc.html" style="flex: 1; height: 52px; border-radius: 26px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-decoration: none; color: rgba(255,255,255,0.80); font-size: 11px; font-weight: 600;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>Прогноз</a>
+    <a href="Radar.dc.html" style="flex: 1; height: 52px; border-radius: 26px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-decoration: none; color: rgba(255,255,255,0.80); font-size: 11px; font-weight: 600;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5 9-5z"/><path d="m3 13 9 5 9-5"/></svg>Карта</a>
+    <a href="Assistant.dc.html" style="flex: 1; height: 52px; border-radius: 26px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-decoration: none; color: rgba(255,255,255,0.80); font-size: 11px; font-weight: 600;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>Ассистент</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"scene":{"editor":"enum","options":["sun","rain","night","snow"],"default":"sun","section":"Сцена"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { hour: 0 };
+  }
+  renderVals() {
+    const scene = this.props.scene ?? 'sun';
+    const base = 'width: 24px; height: 24px; border-radius: 50%; ';
+    const ORB = {
+      sun: 'background: radial-gradient(circle at 35% 30%, #FFF4C2 0%, #FFC94A 45%, #F08A1C 100%); box-shadow: 0 0 12px rgba(255,190,80,0.6);',
+      cloud: 'background: radial-gradient(circle at 35% 30%, #FFFFFF 0%, #DDE5F5 55%, #A7B4CF 100%);',
+      rain: 'background: radial-gradient(circle at 35% 30%, #C9D3E6 0%, #8592AD 55%, #4B5670 100%); box-shadow: 0 6px 0 -3px #8FD8FF;',
+      moon: 'background: radial-gradient(circle at 35% 30%, #FFFFFF 0%, #E6E9F5 50%, #A9B0CC 100%); box-shadow: 0 0 12px rgba(200,210,255,0.5);',
+      snow: 'background: radial-gradient(circle at 35% 30%, #FFFFFF 0%, #EAF2FF 50%, #B8C8E6 100%); box-shadow: 0 0 10px rgba(255,255,255,0.6);'
+    };
+    const S = {
+      sun: { bg: 'linear-gradient(180deg, #1D4ED8 0%, #3B82F6 50%, #6EA8F7 100%)', time: 'Сейчас · 14:20', label: 'Солнце над парящей платформой, рядом облако', temp: '18°', cond: 'Солнечно', feels: 'Ощущается как 16°', range: '↑21° ↓11°', now: 'Без осадков ближайшие 2 часа', nowSub: 'Уверенность прогноза 94 %',
+        hours: [['Сейчас','18°','sun'],['15:00','19°','sun'],['16:00','20°','cloud'],['17:00','19°','cloud'],['18:00','17°','sun'],['19:00','15°','sun']] },
+      rain: { bg: 'linear-gradient(180deg, #141B2B 0%, #2A3650 55%, #45546F 100%)', time: 'Сейчас · 17:05', label: 'Тёмная туча, идёт дождь', temp: '12°', cond: 'Небольшой дождь', feels: 'Ощущается как 9°', range: '↑13° ↓8°', now: 'Дождь закончится через 24 мин', nowSub: 'Уверенность прогноза 87 %',
+        hours: [['Сейчас','12°','rain'],['18:00','12°','rain'],['19:00','11°','cloud'],['20:00','10°','cloud'],['21:00','9°','moon'],['22:00','8°','moon']] },
+      night: { bg: 'linear-gradient(180deg, #05081A 0%, #121A44 55%, #2B2F6B 100%)', time: 'Сейчас · 23:40', label: 'Луна и звёзды над парящей платформой', temp: '9°', cond: 'Ясно', feels: 'Ощущается как 7°', range: '↑17° ↓6°', now: 'Без осадков до утра', nowSub: 'Видимость звёзд — отличная',
+        hours: [['Сейчас','9°','moon'],['00:00','8°','moon'],['01:00','8°','moon'],['02:00','7°','cloud'],['03:00','7°','cloud'],['04:00','6°','moon']] },
+      snow: { bg: 'linear-gradient(180deg, #26324B 0%, #4D6087 55%, #7489AE 100%)', time: 'Сейчас · 09:15', label: 'Снежная туча, падают снежинки', temp: '−3°', cond: 'Снегопад', feels: 'Ощущается как −8°', range: '↑−1° ↓−6°', now: 'Снег усилится через 40 мин', nowSub: 'Уверенность прогноза 81 %',
+        hours: [['Сейчас','−3°','snow'],['10:00','−3°','snow'],['11:00','−2°','snow'],['12:00','−1°','cloud'],['13:00','−1°','cloud'],['14:00','−2°','snow']] }
+    };
+    const s = S[scene] || S.sun;
+    const hours = s.hours.map((h, i) => ({
+      t: h[0], temp: h[1], orb: base + ORB[h[2]],
+      on: this.state.hour === i ? 'true' : 'false',
+      bg: this.state.hour === i ? 'rgba(255,255,255,0.20)' : 'rgba(255,255,255,0)',
+      pick: () => this.setState({ hour: i })
+    }));
+    const drops = Array.from({ length: 22 }, (_, i) => ({ s: 'left: ' + (90 + (i * 47) % 210) + 'px; animation-delay: -' + (i * 0.13).toFixed(2) + 's; animation-duration: ' + (0.7 + (i % 4) * 0.12).toFixed(2) + 's;' }));
+    const flakes = Array.from({ length: 20 }, (_, i) => ({ s: 'left: ' + (90 + (i * 53) % 210) + 'px; animation-delay: -' + (i * 0.31).toFixed(2) + 's; animation-duration: ' + (2.6 + (i % 5) * 0.35).toFixed(2) + 's;' }));
+    const stars = Array.from({ length: 18 }, (_, i) => ({ s: 'left: ' + (20 + (i * 71) % 350) + 'px; top: ' + (10 + (i * 37) % 170) + 'px; animation-delay: -' + (i * 0.4).toFixed(1) + 's;' }));
+    return {
+      bg: s.bg, time: s.time, sceneLabel: s.label, temp: s.temp, cond: s.cond, feels: s.feels, range: s.range, now: s.now, nowSub: s.nowSub,
+      isSun: scene === 'sun', isRain: scene === 'rain', isNight: scene === 'night', isSnow: scene === 'snow',
+      hours, drops, flakes, stars
+    };
+  }
+}
+</script>
+</body>
+</html>
