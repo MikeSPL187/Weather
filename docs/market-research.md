@@ -1,7 +1,20 @@
 # Aura — погодное приложение с 3D-дизайном
 ## Отчёт об исследовании рынка
 
-*Дата: 22 октября 2026 · Рабочее название продукта: **Aura** (можно сменить)*
+*Дата: 22 октября 2026 · Название продукта: **Aura***
+
+---
+
+## 0. Принятые решения (22.10.2026)
+
+| Вопрос | Решение |
+|---|---|
+| Название | **Aura** |
+| Рынок первого релиза | **Россия и СНГ** |
+| Платформа | **Только Android** |
+| Следующий шаг | Доработка макетов до полного набора экранов MVP |
+
+Ниже отчёт учитывает эти решения. Раздел 11 описывает, что из них следует для продукта.
 
 ---
 
@@ -149,11 +162,15 @@
 | **Lifetime** | Всё из Aura+ навсегда | [ЦЕНА] — ориентир $59,99 |
 | **Семейный** | До 6 человек | [ЦЕНА/год] |
 
+> Для рынка РФ/СНГ цены в рублях и каналы оплаты описаны в разделе 11.3.
+
 Дополнительно: платные «скины» сцены (зимний город, космос, аниме) как разовые покупки.
 
 ---
 
-## 7. Технологический стек (рекомендация)
+## 7. Технологический стек (исходная рекомендация)
+
+> ⚠️ Выбрана платформа Android-only — актуальный стек в разделе 11.4. Таблица ниже сохранена для истории.
 
 | Слой | Рекомендация | Почему |
 |---|---|---|
@@ -196,9 +213,70 @@
 
 1. Утвердить название, бренд и концепцию по макетам (`design/`).
 2. Провести 10–15 интервью с пользователями и протестировать прототип на кликабельных макетах.
-3. Сделать технический спайк: 3D-сцена на RealityKit (60/120 fps, расход батареи) и сравнить точность источников данных для 3 городов.
-4. Купить данные Sensor Tower или AppMagic по категории Weather (РФ + США + ЕС).
-5. Выпустить MVP на iOS: срок [СРОК].
+3. Сделать технический спайк: 3D-сцена на Filament на флагмане и бюджетном Xiaomi (fps, расход батареи, нагрев) и сравнить точность источников данных для 3 городов.
+4. Купить данные Sensor Tower или AppMagic по категории Weather (РФ + СНГ) и запросить статистику категории у RuStore.
+5. Выпустить MVP на Android (RuStore + Google Play): срок [СРОК].
+
+---
+
+## 11. Россия, СНГ и Android: что меняется
+
+### 11.1 Почему Android — правильный старт для РФ
+- По данным 2ГИС (I пол. 2025 г., 25 млн устройств), в городах-миллионниках 52 % запусков приходится на Android, 48 % на iPhone. iPhone лидирует только в Москве (53,3 %) и Санкт-Петербурге (54,4 %), Android — в 10 из 16 крупнейших городов ([Kod.ru](https://kod.ru/2gis-ios-vs-android)).
+- По опросу Т-Банка (окт. 2024 г.), Android у 58 % владельцев смартфонов ([Т-Банк](https://tbank.ru/about/news/09122024-t-pay-research-how-do-iphone-and-android-smartphone-owners-differ-from-each-other-in-russia)). По продажам в штуках лидирует Xiaomi с 22 % ([vc.ru](https://vc.ru/id4195458/2871140-preimushchestva-android-pered-ios)).
+- **Вывод:** Android — это большинство аудитории за пределами двух столиц. Но аудитория сильно разнородна по мощности устройств: от флагманов до бюджетных Xiaomi, Realme и Tecno. Поэтому 3D должен масштабироваться по уровням качества (11.4).
+
+### 11.2 Дистрибуция
+| Канал | Роль | Комментарий |
+|---|---|---|
+| **RuStore** | Основной | С 1 сентября 2025 г. RuStore обязательно предустанавливается на смартфоны и планшеты, которые продаются в РФ ([Гарант](https://harant.ru/blog/grazhdanskoe-pravo/rustore-teper-obyazatelen-na-vseh-smartfonah-i-planshetah/), [Securitylab](https://www.securitylab.ru/blog/personal/Bitshield/356127.php)) |
+| **Google Play** | Второй по охвату | Платежи Google Play для пользователей из РФ недоступны с весны 2022 г. С августа 2022 г., по требованию ФАС, разрешены сторонние платёжные системы ([Rozetked](https://rozetked.me/news/25301-google-razreshil-razrabotchikam-iz-rossii-vstraivat-al-ternativnye-sposoby-oplaty), [Naked Science](https://naked-science.ru/article/media/pokupku-prilozhenij-v-google-play-dlya-rossiyan)). Текущие правила нужно проверить по справке Google Play |
+| AppGallery, Galaxy Store, Xiaomi GetApps | Дополнительные | Владельцы Huawei и Xiaomi; публикация обходится дёшево |
+
+### 11.3 Монетизация в рублях
+- **Платёжная инфраструктура:** RuStore Pay SDK (подписки и покупки). RuStore отмечает, что рынок смещается от разовых покупок к подпискам ([WN Hub](https://wnhub.io/ru/news/monetization/item-49725)).
+- **Юрлицо обязательно:** с 1 февраля 2026 г. самозанятые лишились платёжных инструментов RuStore, монетизация доступна ИП и юрлицам ([источник](https://xn--80aapgyievp4gwb.xn--p1ai/blog/rustore-otmenyaet-monetizaciyu-samozanyatym)). Комиссия в одном из материалов указана как 15 % ([Kod.ru](https://kod.ru/rustore-new-monetization-apps)). Перед запуском её нужно сверить с официальными условиями.
+
+| Тариф | Цена (гипотеза для A/B-теста) |
+|---|---|
+| Free (без рекламы) | 0 ₽ |
+| Aura+ месяц | [ЦЕНА] — ориентир 149 ₽ |
+| Aura+ год | [ЦЕНА] — ориентир 990 ₽ (≈ 82 ₽/мес) |
+| Lifetime | [ЦЕНА] — ориентир 2 490 ₽ |
+
+Ориентиры нужно проверить против цен подписок у российских приложений-аналогов и платёжеспособности в СНГ (Казахстан, Узбекистан, Беларусь).
+
+### 11.4 Технологический стек (Android-only)
+| Слой | Решение |
+|---|---|
+| Язык и UI | Kotlin + Jetpack Compose, Material 3 |
+| 3D-сцена | **Filament** (glTF), процедурные облака и осадки на AGSL `RuntimeShader` (Android 13+) с fallback на предрендеренные анимации |
+| Уровни качества | «Высокое» (флагманы, 90–120 Гц), «Сбалансированное» (30–60 fps), «Эконом» (статичная сцена с параллаксом). Уровень выбирается автоматически по GPU и заряду батареи |
+| Виджеты | Jetpack Glance: 4×2 со сценой, 2×2, 4×1 «дождь по минутам» |
+| Минутный прогноз | Ongoing-уведомление в стиле progress (Android 16 Live Updates), на старых версиях — обычное ongoing-уведомление ([Android Authority](https://androidauthority.com/android-16-live-notifications-3518375), [ProAndroidDev](https://proandroiddev.com/live-updates-in-android-16-exploring-the-next-evolution-of-notifications-1a5cf5de2068)) |
+| Часы | Wear OS (v1.5) |
+| Данные | Meteum API (Яндекс) для РФ, Open-Meteo (ECMWF / ICON / GFS) для СНГ, данные Росгидромета. Лицензии и цены нужно проверить |
+| Карты | Тайлы российского провайдера (Яндекс / 2ГИС / OSM-хостинг в РФ) |
+| Пуши | RuStore Push SDK + FCM: у устройств без Google-сервисов (Huawei) FCM недоступен |
+| Хранение данных | Серверы в РФ (152-ФЗ о персональных данных: геолокация пользователя) |
+
+### 11.5 Конкуренты на Android в РФ/СНГ
+Основные: **Яндекс Погода** (точность, Meteum), **Gismeteo** (узнаваемость), **RP5** (энтузиасты), а также **предустановленные погодные приложения** производителей (Xiaomi, Samsung, Huawei) — по сути «бесплатный дефолт», как Apple Weather на iOS. Ни у одного из них нет «вау-дизайна». Это главный аргумент Aura.
+
+### 11.6 Изменения в роадмапе
+- Live Activity / Dynamic Island → **ongoing-уведомление с прогрессом (Live Updates)**.
+- Apple Watch → **Wear OS**.
+- Виджеты iOS → **виджеты Glance** + Material You (цвета виджета подстраиваются под обои).
+- Языки: русский (v1.0) → казахский, узбекский, английский (v1.5).
+- Новые экраны MVP: онбординг с запросом геолокации, список городов, подписка Aura+, настройки (тема, единицы, качество 3D, источник данных).
+
+### 11.7 Новые риски
+| Риск | Митигация |
+|---|---|
+| Слабые устройства не тянут 3D | Уровни качества, автоматическое определение, режим «Эконом» |
+| Изменения правил оплаты в сторах | Несколько каналов (RuStore + альтернативный биллинг в Google Play), веб-оплата для Lifetime |
+| Санкционные ограничения сервисов (карты, FCM, облака) | Российские провайдеры по умолчанию, зарубежные — как резерв |
+| Сильный бесплатный конкурент (Яндекс) | Дизайн, отсутствие рекламы, виджеты, ассистент. Данные Meteum можно не обходить, а использовать |
 
 ---
 
@@ -215,4 +293,7 @@
 - Яндекс Погода — [Справка](https://yandex.ru/support/weather/faq.html), [Rozetked](https://rozetked.me/news/17853-meteum-2-0-novaya-tehnologiya-prognoza-pogody-ot-yandeksa), [Mel.fm](https://mel.fm/novosti/4083526-yandex), [Mobile-Review](https://mobile-review.com/all/press_releases/yandeks-pogoda-nachala-delat-tematicheskie-prognozy/), [Kod.ru](https://kod.ru/neuro-prognozy-yandex)
 - Gismeteo / РФ — [Ahrefs](https://ahrefs.com/es/top/gismeteo.ru), [iPhones.ru](https://www.iphones.ru/iNotes/apple-yandeks-ili-gismeteo-kto-luchshe-vsego-predskazyvaet-pogodu-v-rossii-testy-na-dozhd-i-solnce), [Overclockers](https://overclockers.ru/lab/show/81978/vybiraem-meteoservis-dlya-android-ustrojstv-gismeteo-yandeks-pogoda-i-rp5-raspisanie-pogody), [Хабр](https://habr.com/ru/post/724686)
 - ИИ-прогнозирование — [ECMWF](https://events.ecmwf.int/event/495/contributions/5751/attachments/3479/5853/Data-driven-weather-forecasting-ml-training.pdf), [EU Space](https://eu-space.europa.eu/sites/default/files/2026-06/2_AIRevolution_EarthSystem_Chantry_March2026.pdf), [Gizmodo](https://gizmodo.com/europes-new-ai-weather-model-is-faster-smarter-and-free-heres-what-to-know-2000567775)
+- Android в РФ — [Kod.ru / 2ГИС](https://kod.ru/2gis-ios-vs-android), [Т-Банк](https://tbank.ru/about/news/09122024-t-pay-research-how-do-iphone-and-android-smartphone-owners-differ-from-each-other-in-russia), [vc.ru](https://vc.ru/id4195458/2871140-preimushchestva-android-pered-ios)
+- RuStore и оплата — [Гарант](https://harant.ru/blog/grazhdanskoe-pravo/rustore-teper-obyazatelen-na-vseh-smartfonah-i-planshetah/), [Securitylab](https://www.securitylab.ru/blog/personal/Bitshield/356127.php), [WN Hub](https://wnhub.io/ru/news/monetization/item-49725), [Kod.ru](https://kod.ru/rustore-new-monetization-apps), [Trashbox](https://trashbox.ru/topics/207509/dohody-razrabotchikov-v-rustore-vyrosli-na-30), [Rozetked](https://rozetked.me/news/25301-google-razreshil-razrabotchikam-iz-rossii-vstraivat-al-ternativnye-sposoby-oplaty), [Naked Science](https://naked-science.ru/article/media/pokupku-prilozhenij-v-google-play-dlya-rossiyan)
+- Android 16 Live Updates — [Android Authority](https://androidauthority.com/android-16-live-notifications-3518375), [ProAndroidDev](https://proandroiddev.com/live-updates-in-android-16-exploring-the-next-evolution-of-notifications-1a5cf5de2068)
 - Apple iOS 26 — [Apple](https://www.apple.com/os/pdf/All_New_Features_iOS_26_Sept_2025.pdf), [MacRumors](https://www.macrumors.com/2025/06/09/apple-announces-ios-26)

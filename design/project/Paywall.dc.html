@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Aura — подписка Aura+</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Unbounded:wght@300;500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#FFD58F}a:hover{color:#FFFFFF}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes twinkle{0%,100%{opacity:.25}50%{opacity:1}}
+@media (prefers-reduced-motion: reduce){*{animation:none!important}}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; box-sizing: border-box; background: linear-gradient(180deg, #05081A 0%, #121A44 55%, #1E2560 100%); font-family: 'Manrope', system-ui, sans-serif; color: #FFFFFF; display: flex; flex-direction: column; padding: 40px 20px 24px;">
+
+  <sc-for list="{{stars}}" as="st" hint-placeholder-count="16">
+    <span aria-hidden="true" style="position: absolute; width: 3px; height: 3px; border-radius: 50%; background: #FFFFFF; animation: twinkle 3s ease-in-out infinite; {{st.s}}"></span>
+  </sc-for>
+
+  <header style="display: flex; justify-content: flex-end; position: relative;">
+    <a href="Settings.dc.html" aria-label="Закрыть" style="width: 44px; height: 44px; border-radius: 22px; background: rgba(255,255,255,0.10); display: flex; align-items: center; justify-content: center; color: #FFFFFF;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </a>
+  </header>
+
+  <div aria-hidden="true" style="position: relative; height: 116px; display: flex; justify-content: center; margin-top: -16px;">
+    <div style="position: absolute; top: 0; width: 116px; height: 116px; border-radius: 50%; background: conic-gradient(from 0deg, rgba(255,181,71,0), rgba(255,181,71,0.8), rgba(111,227,255,0.8), rgba(156,123,255,0.8), rgba(255,181,71,0)); -webkit-mask-image: radial-gradient(circle, transparent 60%, #000 62%, transparent 70%); mask-image: radial-gradient(circle, transparent 60%, #000 62%, transparent 70%); animation: spin 8s linear infinite;"></div>
+    <div style="position: absolute; top: 20px; width: 76px; height: 76px; border-radius: 50%; background: radial-gradient(circle at 34% 28%, #FFFFFF 0%, #FFE3A0 20%, #FFB547 48%, #6E5BD6 100%); box-shadow: 0 0 50px rgba(255,181,71,0.5), inset -10px -12px 22px rgba(40,20,90,0.5); animation: float 5s ease-in-out infinite;"></div>
+  </div>
+
+  <h1 style="margin: 14px 0 0; text-align: center; font-family: 'Unbounded', sans-serif; font-weight: 500; font-size: 30px; position: relative;">Aura+</h1>
+  <p style="margin: 6px 0 0; text-align: center; font-size: 14px; color: rgba(255,255,255,0.86); position: relative;">Всё небо целиком. Без рекламы — как и всегда.</p>
+
+  <ul style="list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; position: relative;">
+    <sc-for list="{{features}}" as="f" hint-placeholder-count="5">
+      <li style="display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600;">
+        <span aria-hidden="true" style="width: 24px; height: 24px; border-radius: 12px; background: rgba(255,181,71,0.22); color: #FFC56B; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg>
+        </span>{{f}}
+      </li>
+    </sc-for>
+  </ul>
+
+  <div role="radiogroup" aria-label="Тариф" style="display: flex; flex-direction: column; gap: 8px; margin-top: 16px; position: relative;">
+    <sc-for list="{{plans}}" as="p" hint-placeholder-count="3">
+      <button role="radio" onClick="{{p.pick}}" aria-checked="{{p.on}}" style="min-height: 60px; display: flex; align-items: center; gap: 12px; padding: 0 16px; border-radius: 20px; font-family: inherit; color: #FFFFFF; text-align: left; cursor: pointer; {{p.s}}">
+        <span aria-hidden="true" style="width: 20px; height: 20px; border-radius: 10px; box-sizing: border-box; flex-shrink: 0; {{p.dot}}"></span>
+        <span style="display: flex; flex-direction: column; flex-grow: 1;">
+          <span style="font-size: 15px; font-weight: 700;">{{p.name}}</span>
+          <span style="font-size: 12px; color: rgba(255,255,255,0.82);">{{p.sub}}</span>
+        </span>
+        <sc-if value="{{p.hasBadge}}" hint-placeholder-val="{{ false }}">
+          <span style="padding: 4px 8px; border-radius: 8px; background: #FFB547; color: #1A1206; font-size: 11px; font-weight: 700;">{{p.badge}}</span>
+        </sc-if>
+        <span style="font-size: 16px; font-weight: 700;">{{p.price}}</span>
+      </button>
+    </sc-for>
+  </div>
+
+  <button style="margin-top: 16px; height: 56px; border-radius: 28px; border: 0; background: #FFB547; color: #1A1206; font-family: inherit; font-size: 16px; font-weight: 700; cursor: pointer; position: relative;">{{cta}}</button>
+  <p style="margin: 10px 0 0; text-align: center; font-size: 12px; line-height: 1.5; color: rgba(255,255,255,0.78); position: relative;">Оплата через RuStore или Google Play. Отмена в любой момент — купленное не отбирается.</p>
+  <div style="display: flex; justify-content: center; gap: 20px; margin-top: 4px; font-size: 13px; font-weight: 700; position: relative;">
+    <a href="#restore" style="min-height: 44px; display: flex; align-items: center;">Восстановить покупки</a>
+    <a href="#terms" style="min-height: 44px; display: flex; align-items: center;">Условия</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { plan: 0 };
+  }
+  renderVals() {
+    const P = [
+      { name: 'Год', sub: '≈ 82 ₽ в месяц · 7 дней бесплатно', price: '990 ₽', badge: '−45 %', cta: 'Попробовать 7 дней бесплатно' },
+      { name: 'Месяц', sub: 'Можно отменить в любой момент', price: '149 ₽', badge: '', cta: 'Оформить за 149 ₽ в месяц' },
+      { name: 'Навсегда', sub: 'Один платёж, все будущие функции', price: '2 490 ₽', badge: '', cta: 'Купить навсегда за 2 490 ₽' }
+    ];
+    const sel = this.state.plan;
+    const plans = P.map((p, i) => ({
+      name: p.name, sub: p.sub, price: p.price, badge: p.badge, hasBadge: p.badge !== '',
+      on: sel === i ? 'true' : 'false',
+      s: sel === i ? 'background: rgba(255,181,71,0.14); border: 2px solid #FFB547;' : 'background: rgba(255,255,255,0.06); border: 2px solid rgba(255,255,255,0.16);',
+      dot: sel === i ? 'border: 6px solid #FFB547; background: #1A1206;' : 'border: 2px solid rgba(255,255,255,0.55);',
+      pick: () => this.setState({ plan: i })
+    }));
+    const stars = Array.from({ length: 16 }, (_, i) => ({ s: 'left: ' + (14 + (i * 67) % 360) + 'px; top: ' + (20 + (i * 43) % 260) + 'px; animation-delay: -' + (i * 0.4).toFixed(1) + 's;' }));
+    return {
+      plans, stars, cta: P[sel].cta,
+      features: ['Минутный прогноз для всех городов', '3D-карта: осадки, облака, температура, ветер', 'ИИ-ассистент и профили активностей', 'Все виджеты и сцены: зима, космос, северное сияние', 'Сравнение моделей ECMWF, ICON, GFS и ИИ']
+    };
+  }
+}
+</script>
+</body>
+</html>

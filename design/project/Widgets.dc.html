@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<title>Aura — виджеты и Live Activity</title>
+<title>Aura — виджеты Android и Live Updates</title>
 <script src="./support.js"></script>
 </head>
 <body>
@@ -15,82 +15,101 @@ body{margin:0}
 a{color:#FFFFFF}a:hover{color:#9FEFFF}
 </style>
 </helmet>
-<div style="width: 390px; height: 844px; position: relative; overflow: hidden; box-sizing: border-box; background: linear-gradient(180deg, #141B2B 0%, #263552 55%, #3C4C6C 100%); font-family: 'Manrope', system-ui, sans-serif; color: #FFFFFF; display: flex; flex-direction: column; align-items: center; padding: 12px 16px 24px;">
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; box-sizing: border-box; background: linear-gradient(180deg, #141B2B 0%, #263552 55%, #3C4C6C 100%); font-family: 'Manrope', system-ui, sans-serif; color: #FFFFFF; display: flex; flex-direction: column; padding: 40px 16px 24px;">
 
-  <div style="height: 37px; padding: 0 14px 0 10px; border-radius: 19px; background: #000000; display: flex; align-items: center; gap: 70px;">
-    <span style="display: flex; align-items: center; gap: 6px;">
-      <span aria-hidden="true" style="width: 18px; height: 18px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #C9D3E6 0%, #8592AD 55%, #4B5670 100%); box-shadow: 0 4px 0 -2px #8FD8FF;"></span>
-    </span>
-    <span style="font-size: 13px; font-weight: 700; color: #9FEFFF;">24 мин</span>
-  </div>
-  <div style="font-size: 11px; color: rgba(255,255,255,0.70); margin-top: 6px; letter-spacing: 0.6px;">DYNAMIC ISLAND</div>
-
-  <div style="margin-top: 22px; text-align: center;">
-    <div style="font-size: 17px; font-weight: 600; color: rgba(255,255,255,0.88);">Четверг, 22 октября</div>
-    <div style="font-family: 'Unbounded', sans-serif; font-weight: 500; font-size: 84px; line-height: 1; letter-spacing: -2px; margin-top: 4px;">17:05</div>
-  </div>
-
-  <div style="display: flex; gap: 10px; margin-top: 16px;">
-    <div role="img" aria-label="12 градусов, диапазон от 8 до 13" style="width: 64px; height: 64px; border-radius: 50%; background: rgba(255,255,255,0.14); backdrop-filter: blur(20px); display: flex; align-items: center; justify-content: center; position: relative;">
-      <div aria-hidden="true" style="position: absolute; inset: 5px; border-radius: 50%; background: conic-gradient(from 225deg, #6FE3FF 0deg 200deg, rgba(255,255,255,0.18) 200deg 270deg, transparent 270deg); -webkit-mask-image: radial-gradient(circle, transparent 74%, #000 76%); mask-image: radial-gradient(circle, transparent 74%, #000 76%);"></div>
-      <span style="font-size: 20px; font-weight: 700;">12°</span>
-    </div>
-    <div style="width: 160px; height: 64px; border-radius: 18px; background: rgba(255,255,255,0.14); backdrop-filter: blur(20px); padding: 8px 12px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center;">
-      <span style="font-size: 13px; font-weight: 700;">Дождь стихнет</span>
-      <span style="font-size: 12px; color: rgba(255,255,255,0.85);">в 17:29 · снова в 18:25</span>
-    </div>
-    <div role="img" aria-label="Качество воздуха 32, хорошее" style="width: 64px; height: 64px; border-radius: 50%; background: rgba(255,255,255,0.14); backdrop-filter: blur(20px); display: flex; flex-direction: column; align-items: center; justify-content: center;">
-      <span style="font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.80);">AQI</span>
-      <span style="font-size: 18px; font-weight: 700; color: #7DE3A8;">32</span>
+  <div style="font-size: 11px; color: rgba(255,255,255,0.72); letter-spacing: 0.6px;">ЭКРАН БЛОКИРОВКИ · LIVE UPDATE</div>
+  <div style="display: flex; align-items: flex-end; justify-content: space-between; margin-top: 10px; padding: 0 4px;">
+    <div style="font-family: 'Unbounded', sans-serif; font-weight: 300; font-size: 72px; line-height: 0.95; letter-spacing: -2px;">17<br>05</div>
+    <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px; padding-bottom: 6px;">
+      <span style="font-size: 15px; font-weight: 600;">Чт, 22 октября</span>
+      <span style="font-size: 13px; color: rgba(255,255,255,0.85);">12° · дождь</span>
     </div>
   </div>
-  <div style="font-size: 11px; color: rgba(255,255,255,0.70); margin-top: 8px; letter-spacing: 0.6px;">ВИДЖЕТЫ ЭКРАНА БЛОКИРОВКИ</div>
 
-  <div style="margin-top: 22px; width: 100%; padding: 14px 16px; box-sizing: border-box; border-radius: 26px; background: rgba(12,16,30,0.72); border: 1px solid rgba(255,255,255,0.14); backdrop-filter: blur(24px); display: flex; flex-direction: column; gap: 10px;">
-    <div style="display: flex; align-items: center; gap: 10px;">
-      <span aria-hidden="true" style="width: 34px; height: 34px; border-radius: 11px; background: linear-gradient(180deg, #2A3650, #45546F); display: flex; align-items: center; justify-content: center;">
-        <span style="width: 18px; height: 18px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #C9D3E6 0%, #8592AD 55%, #4B5670 100%); box-shadow: 0 4px 0 -2px #8FD8FF;"></span>
+  <div style="margin-top: 16px; padding: 14px 16px; border-radius: 28px; background: #E2E8F7; color: #13203D; display: flex; flex-direction: column; gap: 10px;">
+    <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #3A4A6B;">
+      <span aria-hidden="true" style="width: 22px; height: 22px; border-radius: 50%; background: linear-gradient(180deg, #1D4ED8, #3B82F6); display: flex; align-items: center; justify-content: center;">
+        <span style="width: 11px; height: 11px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #FFF4C2, #FFC94A 50%, #F08A1C);"></span>
       </span>
+      <span style="font-weight: 700;">Aura</span><span>· Хамовники · сейчас</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 12px;">
       <span style="display: flex; flex-direction: column; flex-grow: 1;">
-        <span style="font-size: 15px; font-weight: 700;">Дождь закончится через 24 мин</span>
-        <span style="font-size: 12px; color: rgba(255,255,255,0.80);">Хамовники · 2,4 мм/ч · уверенность 87 %</span>
+        <span style="font-size: 17px; font-weight: 700;">Дождь закончится через 24 мин</span>
+        <span style="font-size: 13px; color: #3A4A6B;">2,4 мм/ч · снова пойдёт около 18:25</span>
       </span>
+      <span aria-hidden="true" style="width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; background: radial-gradient(circle at 35% 30%, #C9D3E6 0%, #8592AD 55%, #4B5670 100%); box-shadow: 0 6px 0 -3px #3A9BE0;"></span>
     </div>
-    <div role="img" aria-label="Осадки стихают к 17:29" style="display: flex; gap: 3px; align-items: flex-end; height: 34px;">
-      <span style="flex: 1; height: 100%; border-radius: 3px; background: #9FEFFF;"></span>
-      <span style="flex: 1; height: 92%; border-radius: 3px; background: #9FEFFF;"></span>
-      <span style="flex: 1; height: 80%; border-radius: 3px; background: #6FE3FF;"></span>
-      <span style="flex: 1; height: 62%; border-radius: 3px; background: #6FE3FF;"></span>
-      <span style="flex: 1; height: 40%; border-radius: 3px; background: #5FB8FF;"></span>
-      <span style="flex: 1; height: 20%; border-radius: 3px; background: #5FB8FF;"></span>
-      <span style="flex: 1; height: 8%; border-radius: 3px; background: rgba(255,255,255,0.25);"></span>
-      <span style="flex: 1; height: 8%; border-radius: 3px; background: rgba(255,255,255,0.25);"></span>
-      <span style="flex: 1; height: 8%; border-radius: 3px; background: rgba(255,255,255,0.25);"></span>
-      <span style="flex: 1; height: 8%; border-radius: 3px; background: rgba(255,255,255,0.25);"></span>
-      <span style="flex: 1; height: 8%; border-radius: 3px; background: rgba(255,255,255,0.25);"></span>
-      <span style="flex: 1; height: 8%; border-radius: 3px; background: rgba(255,255,255,0.25);"></span>
+    <div role="img" aria-label="Прогресс: дождь до 17:29, затем сухо до 18:25" style="display: flex; flex-direction: column; gap: 6px;">
+      <div style="display: flex; gap: 3px; height: 8px;">
+        <span style="flex: 24; border-radius: 4px 2px 2px 4px; background: #1F6FD1;"></span>
+        <span style="flex: 56; border-radius: 2px; background: #BCC8E0;"></span>
+        <span style="flex: 30; border-radius: 2px 4px 4px 2px; background: #6FA3E8;"></span>
+      </div>
+      <div style="display: flex; justify-content: space-between; font-size: 11px; color: #3A4A6B; font-weight: 600;"><span>17:05</span><span>17:29 сухо</span><span>18:25</span><span>18:55</span></div>
     </div>
-    <div aria-hidden="true" style="display: flex; justify-content: space-between; font-size: 11px; color: rgba(255,255,255,0.75);"><span>Сейчас</span><span>17:30</span><span>18:05</span></div>
   </div>
-  <div style="font-size: 11px; color: rgba(255,255,255,0.70); margin-top: 8px; letter-spacing: 0.6px;">LIVE ACTIVITY</div>
 
-  <div style="margin-top: 22px; width: 100%; height: 158px; box-sizing: border-box; border-radius: 26px; overflow: hidden; position: relative; background: linear-gradient(180deg, #1D4ED8 0%, #3B82F6 100%); box-shadow: 0 20px 40px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,0.35); padding: 14px 16px; display: flex; flex-direction: column; justify-content: space-between;">
-    <div aria-hidden="true" style="position: absolute; right: 18px; top: 10px; width: 72px; height: 72px; border-radius: 50%; background: radial-gradient(circle at 34% 30%, #FFF8D6 0%, #FFD86B 28%, #FFA92E 62%, #E2701A 100%); box-shadow: 0 0 36px rgba(255,190,80,0.7), inset -7px -9px 16px rgba(180,60,0,0.45);"></div>
-    <div aria-hidden="true" style="position: absolute; right: 2px; top: 52px; width: 70px; height: 34px;">
-      <div style="position: absolute; left: 0; top: 12px; width: 30px; height: 22px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #FFFFFF, #C3CFEA);"></div>
-      <div style="position: absolute; left: 16px; top: 0; width: 36px; height: 34px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #FFFFFF, #C3CFEA);"></div>
-      <div style="position: absolute; left: 40px; top: 10px; width: 28px; height: 24px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #FFFFFF, #C3CFEA);"></div>
+  <div style="font-size: 11px; color: rgba(255,255,255,0.72); letter-spacing: 0.6px; margin-top: 28px;">ГЛАВНЫЙ ЭКРАН · ВИДЖЕТЫ (ЦВЕТА ИЗ ОБОЕВ, MATERIAL YOU)</div>
+
+  <div style="margin-top: 10px; height: 172px; border-radius: 28px; overflow: hidden; position: relative; background: linear-gradient(180deg, #1D4ED8 0%, #3B82F6 100%); box-shadow: 0 16px 36px rgba(0,0,0,0.30); padding: 16px 18px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between;">
+    <div aria-hidden="true" style="position: absolute; right: 24px; top: 14px; width: 80px; height: 80px; border-radius: 50%; background: radial-gradient(circle at 34% 30%, #FFF8D6 0%, #FFD86B 28%, #FFA92E 62%, #E2701A 100%); box-shadow: 0 0 40px rgba(255,190,80,0.7), inset -8px -10px 18px rgba(180,60,0,0.45);"></div>
+    <div aria-hidden="true" style="position: absolute; right: 70px; top: 104px; width: 150px; height: 26px; border-radius: 50%; background: radial-gradient(ellipse at 50% 35%, rgba(255,255,255,0.40), rgba(255,255,255,0.06) 72%); border: 1px solid rgba(255,255,255,0.35);"></div>
+    <div aria-hidden="true" style="position: absolute; right: 6px; top: 62px; width: 76px; height: 38px;">
+      <div style="position: absolute; left: 0; top: 14px; width: 32px; height: 24px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #FFFFFF, #C3CFEA);"></div>
+      <div style="position: absolute; left: 18px; top: 0; width: 38px; height: 36px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #FFFFFF, #C3CFEA);"></div>
+      <div style="position: absolute; left: 44px; top: 12px; width: 30px; height: 26px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #FFFFFF, #C3CFEA);"></div>
     </div>
     <div style="display: flex; flex-direction: column; position: relative;">
       <span style="font-size: 13px; font-weight: 700;">Москва</span>
-      <span style="font-family: 'Unbounded', sans-serif; font-size: 38px; font-weight: 300; line-height: 1.1;">18°</span>
-      <span style="font-size: 12px; color: rgba(255,255,255,0.90);">Солнечно · ↑21° ↓11°</span>
+      <span style="font-family: 'Unbounded', sans-serif; font-size: 40px; font-weight: 300; line-height: 1.1;">18°</span>
+      <span style="font-size: 12px; color: rgba(255,255,255,0.92);">Солнечно · ↑21° ↓11°</span>
     </div>
-    <div style="display: flex; justify-content: space-between; position: relative; font-size: 12px; font-weight: 700;">
+    <div style="display: flex; justify-content: space-between; position: relative; font-size: 12px; font-weight: 700; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.25);">
       <span>15:00 19°</span><span>16:00 20°</span><span>17:00 19°</span><span>18:00 17°</span>
     </div>
   </div>
-  <div style="font-size: 11px; color: rgba(255,255,255,0.70); margin-top: 8px; letter-spacing: 0.6px;">ВИДЖЕТ «ДОМОЙ» · СРЕДНИЙ</div>
+  <div style="font-size: 11px; color: rgba(255,255,255,0.72); margin-top: 6px;">4×2 · 3D-сцена</div>
+
+  <div style="display: flex; gap: 12px; margin-top: 14px;">
+    <div style="display: flex; flex-direction: column; gap: 6px; align-items: center;">
+      <div role="img" aria-label="12 градусов, диапазон от 8 до 13" style="width: 108px; height: 108px; border-radius: 50%; background: #D7E3FF; color: #13203D; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;">
+        <span aria-hidden="true" style="width: 26px; height: 26px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #C9D3E6 0%, #8592AD 55%, #4B5670 100%); box-shadow: 0 5px 0 -3px #3A9BE0;"></span>
+        <span style="font-family: 'Unbounded', sans-serif; font-size: 26px; font-weight: 500; line-height: 1;">12°</span>
+        <span style="font-size: 11px; font-weight: 700; color: #3A4A6B;">↑13° ↓8°</span>
+      </div>
+      <span style="font-size: 11px; color: rgba(255,255,255,0.72);">2×2</span>
+    </div>
+    <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 6px;">
+      <div style="height: 108px; border-radius: 28px; background: #2B3A5C; border: 1px solid rgba(255,255,255,0.14); padding: 14px 16px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+          <span style="font-size: 13px; font-weight: 700;">Дождь по минутам</span>
+          <span style="font-size: 12px; font-weight: 700; color: #9FEFFF;">24 мин</span>
+        </div>
+        <div role="img" aria-label="Осадки стихают к 17:29" style="display: flex; gap: 3px; align-items: flex-end; height: 38px;">
+          <span style="flex: 1; height: 100%; border-radius: 3px; background: #9FEFFF;"></span>
+          <span style="flex: 1; height: 90%; border-radius: 3px; background: #9FEFFF;"></span>
+          <span style="flex: 1; height: 76%; border-radius: 3px; background: #6FE3FF;"></span>
+          <span style="flex: 1; height: 58%; border-radius: 3px; background: #6FE3FF;"></span>
+          <span style="flex: 1; height: 36%; border-radius: 3px; background: #5FB8FF;"></span>
+          <span style="flex: 1; height: 18%; border-radius: 3px; background: #5FB8FF;"></span>
+          <span style="flex: 1; height: 10%; border-radius: 3px; background: rgba(255,255,255,0.25);"></span>
+          <span style="flex: 1; height: 10%; border-radius: 3px; background: rgba(255,255,255,0.25);"></span>
+          <span style="flex: 1; height: 10%; border-radius: 3px; background: rgba(255,255,255,0.25);"></span>
+          <span style="flex: 1; height: 10%; border-radius: 3px; background: rgba(255,255,255,0.25);"></span>
+        </div>
+        <div aria-hidden="true" style="display: flex; justify-content: space-between; font-size: 10px; color: rgba(255,255,255,0.78);"><span>Сейчас</span><span>+30</span><span>+60</span></div>
+      </div>
+      <span style="font-size: 11px; color: rgba(255,255,255,0.72);">3×2 · осадки по минутам</span>
+    </div>
+  </div>
+
+  <div style="margin-top: 14px; height: 64px; border-radius: 32px; background: #D7E3FF; color: #13203D; display: flex; align-items: center; gap: 12px; padding: 0 18px;">
+    <span aria-hidden="true" style="width: 30px; height: 30px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #FFF4C2 0%, #FFC94A 45%, #F08A1C 100%);"></span>
+    <span style="font-size: 15px; font-weight: 700; flex-grow: 1;">Москва 18° · без осадков 2 ч</span>
+    <span style="font-size: 13px; font-weight: 700; color: #1E7A4C;">AQI 32</span>
+  </div>
+  <div style="font-size: 11px; color: rgba(255,255,255,0.72); margin-top: 6px;">4×1 · строка</div>
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
