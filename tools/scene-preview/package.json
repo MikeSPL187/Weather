@@ -1,0 +1,12 @@
+{
+  "name": "aura-scene-preview",
+  "private": true,
+  "type": "module",
+  "description": "Renders the 3D scene's shaders and meshes in headless Chromium for review",
+  "scripts": {
+    "render": "node render.mjs"
+  },
+  "dependencies": {
+    "playwright-core": "1.56.1"
+  }
+}

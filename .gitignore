@@ -6,3 +6,4 @@ local.properties
 .DS_Store
 captures/
 .kotlin/
+tools/scene-preview/node_modules

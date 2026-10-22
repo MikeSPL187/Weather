@@ -87,7 +87,7 @@ internal fun rememberReduceMotion(): Boolean {
     }
 }
 
-private fun sceneDescription(scene: SceneState): String {
+internal fun sceneDescription(scene: SceneState): String {
     val sky = when (scene.condition) {
         Condition.CLEAR -> if (scene.isNight) "звёздное небо и луна" else "солнце в ясном небе"
         Condition.PARTLY_CLOUDY -> if (scene.isNight) "луна среди облаков" else "солнце и облака"

@@ -53,7 +53,7 @@ import app.aura.core.format.Formatters
 import app.aura.core.model.DataSource
 import app.aura.ui.components.AuraIcons
 import app.aura.ui.components.GlassCard
-import app.aura.ui.scene.WeatherScene
+import app.aura.ui.scene3d.LiveScene
 import app.aura.ui.theme.AuraColors
 import app.aura.ui.theme.AuraType
 
@@ -113,7 +113,7 @@ fun NowScreen(
 
             if (scene != null) {
                 // The scene drifts slower than the page and fades as cards scroll over it.
-                WeatherScene(
+                LiveScene(
                     scene = scene,
                     modifier = Modifier
                         .fillMaxWidth()
