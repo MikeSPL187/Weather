@@ -7,11 +7,11 @@ import kotlin.math.roundToInt
 /** Colours for each layer, as ARGB with straight alpha, blended linearly between stops. */
 object MapPalette {
     val precipitation = listOf(
-        0.05f to 0x005FB8FFL, 0.2f to 0x995FB8FFL, 1f to 0xCC3FA9F5L, 3f to 0xDD6A5CFFL, 8f to 0xEEB84DFFL, 20f to 0xF5FF4D8DL,
+        0.05f to 0x005FB8FFL, 0.2f to 0x805FB8FFL, 1f to 0xB03FA9F5L, 3f to 0xC86A5CFFL, 8f to 0xD8B84DFFL, 20f to 0xE6FF4D8DL,
     )
     val clouds = listOf(10f to 0x00E8EEF8L, 50f to 0x66E8EEF8L, 100f to 0xB8F4F7FFL)
     val temperature = listOf(
-        -25f to 0x996A4CFFL, -10f to 0x994F8EF7L, 0f to 0x996FE3FFL, 10f to 0x9934C77BL, 20f to 0x99FFC94AL, 30f to 0x99FF6B4AL,
+        -25f to 0x666A4CFFL, -10f to 0x664F8EF7L, 0f to 0x666FE3FFL, 10f to 0x6634C77BL, 20f to 0x66FFC94AL, 30f to 0x66FF6B4AL,
     )
     val wind = listOf(0f to 0x0034C7B7L, 4f to 0x5534C7B7L, 9f to 0x88FFC94AL, 15f to 0xAAFF6B4AL, 22f to 0xCCD13BFFL)
 
@@ -65,6 +65,28 @@ object MapOverlay {
                 val alpha = ((color ushr 24) * edge * edge * (3 - 2 * edge)).roundToInt().coerceIn(0, 255)
                 out[y * size + x] = (alpha shl 24) or (color and 0xFFFFFF)
             }
+        }
+        return out
+    }
+
+    /** A value written on the map at a grid point. */
+    data class Label(val latitude: Double, val longitude: Double, val text: String)
+
+    /**
+     * Numbers to write over the field: temperature in degrees and wind in m/s at every
+     * [stride]-th grid point, skipping the city itself where its own marker sits.
+     */
+    fun labels(grid: RegionGrid, layer: MapLayer, hour: Float, stride: Int = 2): List<Label> {
+        if (layer != MapLayer.TEMPERATURE && layer != MapLayer.WIND) return emptyList()
+        val points = RegionGrid.points(grid.center, grid.size, grid.stepKm)
+        val mid = (grid.size - 1) / 2
+        val out = mutableListOf<Label>()
+        for (row in 1 until grid.size - 1 step stride) for (col in 1 until grid.size - 1 step stride) {
+            if (row == mid && col == mid) continue
+            val (lat, lon) = points[row * grid.size + col]
+            val text = if (layer == MapLayer.TEMPERATURE) app.aura.core.format.Formatters.temperature(grid.sample(grid.temperatureC, hour, col.toFloat(), row.toFloat()))
+            else "${grid.sample(grid.windSpeedMs, hour, col.toFloat(), row.toFloat()).roundToInt()} м/с"
+            out += Label(lat, lon, text)
         }
         return out
     }

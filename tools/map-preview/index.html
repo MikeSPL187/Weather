@@ -24,9 +24,13 @@
     });
     map.on('load', async () => {
       const [north, south, west, east] = c.bounds;
-      map.addSource('forecast', { type: 'image', url: data + `${p.get('city') || 'msk'}-${layer}.png`,
+      if (p.get('forecast') !== '0') map.addSource('forecast', { type: 'image', url: data + `${p.get('city') || 'msk'}-${layer}.png`,
         coordinates: [[west, north], [east, north], [east, south], [west, south]] });
-      map.addLayer({ id: 'forecast', type: 'raster', source: 'forecast', paint: { 'raster-opacity': 0.9, 'raster-resampling': 'linear', 'raster-fade-duration': 0 } }, 'road-label');
+      if (p.get('forecast') !== '0') map.addLayer({ id: 'forecast', type: 'raster', source: 'forecast', paint: { 'raster-opacity': +(p.get('opacity') || 0.75), 'raster-resampling': 'linear', 'raster-fade-duration': 0 } }, 'road-label');
+      const labels = (c.labels || {})[layer] || [];
+      map.addSource('values', { type: 'geojson', data: { type: 'FeatureCollection', features: labels.map(([lon, lat, t]) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [lon, lat] }, properties: { t } })) } });
+      map.addLayer({ id: 'values', type: 'symbol', source: 'values', layout: { 'text-field': ['get', 't'], 'text-font': ['Noto Sans Bold'], 'text-size': 14, 'text-allow-overlap': true },
+        paint: { 'text-color': '#FFFFFF', 'text-halo-color': 'rgba(10,16,48,0.85)', 'text-halo-width': 1.6 } });
       if (p.get('radar')) {
         try {
           const idx = await (await fetch('https://api.rainviewer.com/public/weather-maps.json')).json();

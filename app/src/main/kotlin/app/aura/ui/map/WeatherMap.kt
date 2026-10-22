@@ -58,7 +58,13 @@ import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
 import org.maplibre.android.style.layers.PropertyFactory
+import org.maplibre.android.style.expressions.Expression
 import org.maplibre.android.style.layers.RasterLayer
+import org.maplibre.android.style.layers.SymbolLayer
+import org.maplibre.android.style.sources.GeoJsonSource
+import org.maplibre.geojson.Feature
+import org.maplibre.geojson.FeatureCollection
+import org.maplibre.geojson.Point
 import org.maplibre.android.style.sources.ImageSource
 import org.maplibre.android.style.sources.RasterSource
 import org.maplibre.android.style.sources.TileSet
@@ -180,13 +186,41 @@ fun WeatherMap(
             s.addSource(ImageSource("forecast", quad(g), bitmap))
             s.addLayerBelow(
                 RasterLayer("forecast", "forecast").withProperties(
-                    PropertyFactory.rasterOpacity(0.9f), PropertyFactory.rasterResampling("linear"), PropertyFactory.rasterFadeDuration(0f),
+                    PropertyFactory.rasterOpacity(0.8f), PropertyFactory.rasterResampling("linear"), PropertyFactory.rasterFadeDuration(0f),
                 ),
                 LABELS_ABOVE,
             )
         } else {
             source.setCoordinates(quad(g))
             source.setImage(bitmap)
+        }
+    }
+
+    // Values written over the field: degrees or m/s at grid points.
+    val labelHour = moment?.forecastHour?.let { kotlin.math.round(it) } ?: 0f
+    LaunchedEffect(style, grid, layer, labelHour) {
+        val s = style ?: return@LaunchedEffect
+        val g = grid ?: return@LaunchedEffect
+        val features = MapOverlay.labels(g, layer, labelHour).map { label ->
+            Feature.fromGeometry(Point.fromLngLat(label.longitude, label.latitude)).apply { addStringProperty("t", label.text) }
+        }
+        val collection = FeatureCollection.fromFeatures(features)
+        val source = s.getSourceAs<GeoJsonSource>("values")
+        if (source == null) {
+            s.addSource(GeoJsonSource("values", collection))
+            s.addLayer(
+                SymbolLayer("values", "values").withProperties(
+                    PropertyFactory.textField(Expression.get("t")),
+                    PropertyFactory.textFont(arrayOf("Noto Sans Bold")),
+                    PropertyFactory.textSize(14f),
+                    PropertyFactory.textAllowOverlap(true),
+                    PropertyFactory.textColor("#FFFFFF"),
+                    PropertyFactory.textHaloColor("rgba(10,16,48,0.85)"),
+                    PropertyFactory.textHaloWidth(1.6f),
+                ),
+            )
+        } else {
+            source.setGeoJson(collection)
         }
     }
 
@@ -224,7 +258,7 @@ fun WeatherMap(
             s.getLayer("radar-$i")?.setProperties(PropertyFactory.rasterOpacity(opacity * 0.9f))
         }
         val forecastOpacity = if (showRadar) m.forecastOpacity else 1f
-        s.getLayer("forecast")?.setProperties(PropertyFactory.rasterOpacity(forecastOpacity * 0.9f))
+        s.getLayer("forecast")?.setProperties(PropertyFactory.rasterOpacity(forecastOpacity * 0.8f))
     }
 
     Box(modifier) {
